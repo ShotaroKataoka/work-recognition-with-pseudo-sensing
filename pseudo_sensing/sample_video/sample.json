@@ -1,13 +1,13 @@
 [
-  { "id": "i9LJo7hnaDM", "senser": [] },
-  { "id": "YZtqxxZwARE", "senser": [] },
-  { "id": "UmSUahKVm74", "senser": [] },
-  { "id": "22HBo1EI50U", "senser": [] },
-  { "id": "feFVo3Ssp_k", "senser": [] },
-  { "id": "FMOuqx6s9aQ", "senser": [] },
-  { "id": "l5VyqMIaL7E", "senser": [] },
-  { "id": "8oFzkYH9A54", "senser": [] },
-  { "id": "mIFuCipTWkQ", "senser": [] },
-  { "id": "L6rzLUJ1QoA", "senser": [] },
-  { "id": "jkq3HWArjXg", "senser": [] }
+  { "id": "i9LJo7hnaDM", "sensers": [] },
+  { "id": "YZtqxxZwARE", "sensers": [] },
+  { "id": "UmSUahKVm74", "sensers": [] },
+  { "id": "22HBo1EI50U", "sensers": [] },
+  { "id": "feFVo3Ssp_k", "sensers": [] },
+  { "id": "FMOuqx6s9aQ", "sensers": [] },
+  { "id": "l5VyqMIaL7E", "sensers": [] },
+  { "id": "8oFzkYH9A54", "sensers": [] },
+  { "id": "mIFuCipTWkQ", "sensers": [] },
+  { "id": "L6rzLUJ1QoA", "sensers": [] },
+  { "id": "jkq3HWArjXg", "sensers": [] }
 ]
