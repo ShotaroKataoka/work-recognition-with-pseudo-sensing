@@ -3,176 +3,121 @@
         "id": "i9LJo7hnaDM",
         "filename": "i9LJo7hnaDM.mp4",
         "info": {
-            "programs": [],
-            "streams": [
-                {
-                    "width": 1920,
-                    "height": 1080,
-                    "r_frame_rate": "30000/1001",
-                    "duration": "4090.653233",
-                    "nb_frames": "122597"
-                }
-            ]
+            "frame_rate": 29.97002997002997,
+            "nb_frames": 119000,
+            "width": 1920,
+            "height": 1080,
+            "duration": 3970.633333333333
         }
     },
     {
         "id": "YZtqxxZwARE",
         "filename": "YZtqxxZwARE.mp4",
         "info": {
-            "programs": [],
-            "streams": [
-                {
-                    "width": 1280,
-                    "height": 720,
-                    "r_frame_rate": "60000/1001",
-                    "duration": "3829.091933",
-                    "nb_frames": "229516"
-                }
-            ]
+            "frame_rate": 59.94005994005994,
+            "nb_frames": 222323,
+            "width": 1280,
+            "height": 720,
+            "duration": 3709.0887166666666
         }
     },
     {
         "id": "UmSUahKVm74",
         "filename": "UmSUahKVm74.mp4",
         "info": {
-            "programs": [],
-            "streams": [
-                {
-                    "width": 1920,
-                    "height": 1080,
-                    "r_frame_rate": "60000/1001",
-                    "duration": "3785.782000",
-                    "nb_frames": "226920"
-                }
-            ]
+            "frame_rate": 59.94005994005994,
+            "nb_frames": 219727,
+            "width": 1920,
+            "height": 1080,
+            "duration": 3665.778783333333
         }
     },
     {
         "id": "22HBo1EI50U",
         "filename": "22HBo1EI50U.mp4",
         "info": {
-            "programs": [],
-            "streams": [
-                {
-                    "width": 1920,
-                    "height": 1080,
-                    "r_frame_rate": "30000/1001",
-                    "duration": "3802.632167",
-                    "nb_frames": "113965"
-                }
-            ]
+            "frame_rate": 29.97002997002997,
+            "nb_frames": 110368,
+            "width": 1920,
+            "height": 1080,
+            "duration": 3682.6122666666665
         }
     },
     {
         "id": "feFVo3Ssp_k",
         "filename": "feFVo3Ssp_k.mp4",
         "info": {
-            "programs": [],
-            "streams": [
-                {
-                    "width": 1920,
-                    "height": 1080,
-                    "r_frame_rate": "30000/1001",
-                    "duration": "4247.243000",
-                    "nb_frames": "127290"
-                }
-            ]
+            "frame_rate": 29.97002997002997,
+            "nb_frames": 123693,
+            "width": 1920,
+            "height": 1080,
+            "duration": 4127.2231
         }
     },
     {
         "id": "FMOuqx6s9aQ",
         "filename": "FMOuqx6s9aQ.mp4",
         "info": {
-            "programs": [],
-            "streams": [
-                {
-                    "width": 1920,
-                    "height": 1080,
-                    "r_frame_rate": "30000/1001",
-                    "duration": "3930.760167",
-                    "nb_frames": "117805"
-                }
-            ]
+            "frame_rate": 29.97002997002997,
+            "nb_frames": 114208,
+            "width": 1920,
+            "height": 1080,
+            "duration": 3810.7402666666667
         }
     },
     {
         "id": "l5VyqMIaL7E",
         "filename": "l5VyqMIaL7E.mp4",
         "info": {
-            "programs": [],
-            "streams": [
-                {
-                    "width": 1920,
-                    "height": 1080,
-                    "r_frame_rate": "30000/1001",
-                    "duration": "3025.255567",
-                    "nb_frames": "90667"
-                }
-            ]
+            "frame_rate": 29.97002997002997,
+            "nb_frames": 87070,
+            "width": 1920,
+            "height": 1080,
+            "duration": 2905.235666666667
         }
     },
     {
         "id": "8oFzkYH9A54",
         "filename": "8oFzkYH9A54.mp4",
         "info": {
-            "programs": [],
-            "streams": [
-                {
-                    "width": 1920,
-                    "height": 1080,
-                    "r_frame_rate": "25/1",
-                    "duration": "3693.720000",
-                    "nb_frames": "92343"
-                }
-            ]
+            "frame_rate": 25.0,
+            "nb_frames": 89343,
+            "width": 1920,
+            "height": 1080,
+            "duration": 3573.72
         }
     },
     {
         "id": "mIFuCipTWkQ",
         "filename": "mIFuCipTWkQ.mp4",
         "info": {
-            "programs": [],
-            "streams": [
-                {
-                    "width": 2560,
-                    "height": 1440,
-                    "r_frame_rate": "25/1",
-                    "duration": "3764.480000",
-                    "nb_frames": "94113"
-                }
-            ]
+            "frame_rate": 25.0,
+            "nb_frames": 91113,
+            "width": 2560,
+            "height": 1440,
+            "duration": 3644.52
         }
     },
     {
         "id": "L6rzLUJ1QoA",
         "filename": "L6rzLUJ1QoA.mp4",
         "info": {
-            "programs": [],
-            "streams": [
-                {
-                    "width": 1920,
-                    "height": 1080,
-                    "r_frame_rate": "60000/1001",
-                    "duration": "3639.285650",
-                    "nb_frames": "218139"
-                }
-            ]
+            "frame_rate": 59.94005994005994,
+            "nb_frames": 210946,
+            "width": 1920,
+            "height": 1080,
+            "duration": 3519.2824333333333
         }
     },
     {
         "id": "jkq3HWArjXg",
         "filename": "jkq3HWArjXg.mp4",
         "info": {
-            "programs": [],
-            "streams": [
-                {
-                    "width": 1920,
-                    "height": 1080,
-                    "r_frame_rate": "30000/1001",
-                    "duration": "1839.537700",
-                    "nb_frames": "55131"
-                }
-            ]
+            "frame_rate": 29.97002997002997,
+            "nb_frames": 51534,
+            "width": 1920,
+            "height": 1080,
+            "duration": 1719.5178
         }
     }
 ]

@@ -1,13 +1,342 @@
 [
-  { "id": "i9LJo7hnaDM", "sensers": [] },
-  { "id": "YZtqxxZwARE", "sensers": [] },
-  { "id": "UmSUahKVm74", "sensers": [] },
-  { "id": "22HBo1EI50U", "sensers": [] },
-  { "id": "feFVo3Ssp_k", "sensers": [] },
-  { "id": "FMOuqx6s9aQ", "sensers": [] },
-  { "id": "l5VyqMIaL7E", "sensers": [] },
-  { "id": "8oFzkYH9A54", "sensers": [] },
-  { "id": "mIFuCipTWkQ", "sensers": [] },
-  { "id": "L6rzLUJ1QoA", "sensers": [] },
-  { "id": "jkq3HWArjXg", "sensers": [] }
+  {
+    "id": "i9LJo7hnaDM",
+    "sensers": [
+      {
+        "x": 880,
+        "y": 280,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Conveyor Motion", "direction": "Forward" },
+        "start_frame": 10000
+      },
+      {
+        "x": 1160,
+        "y": 145,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Conveyor Motion", "direction": "Right" },
+        "start_frame": 7750
+      },
+      {
+        "x": 400,
+        "y": 515,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Conveyor Motion", "direction": "Left" },
+        "start_frame": 7750
+      },
+      {
+        "x": 415,
+        "y": 650,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Conveyor Motion", "direction": "Left" },
+        "start_frame": 7750
+      }
+    ]
+  },
+  {
+    "id": "YZtqxxZwARE",
+    "sensers": [
+      {
+        "x": 730,
+        "y": 410,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Conveyor Motion", "direction": "Forward" },
+        "start_frame": 0
+      },
+      {
+        "x": 500,
+        "y": 490,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Blinking Motion", "direction": null },
+        "start_frame": 0
+      },
+      {
+        "x": 480,
+        "y": 610,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Reciprocating Motion", "direction": "Vertical" },
+        "start_frame": 0
+      },
+      {
+        "x": 630,
+        "y": 40,
+        "w": 25,
+        "h": 25,
+        "movement": {
+          "type": "Rotary Motion",
+          "direction": "Counterclockwise"
+        },
+        "start_frame": 0
+      }
+    ]
+  },
+  {
+    "id": "UmSUahKVm74",
+    "sensers": [
+      {
+        "x": 1020,
+        "y": 540,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Conveyor Motion", "direction": "Right" },
+        "start_frame": 0
+      },
+      {
+        "x": 1405,
+        "y": 170,
+        "w": 25,
+        "h": 25,
+        "movement": {
+          "type": "Reciprocating Motion",
+          "direction": "Horizontal"
+        },
+        "start_frame": 0
+      },
+      {
+        "x": 1420,
+        "y": 190,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Conveyor Motion", "direction": "Right" },
+        "start_frame": 0
+      }
+    ]
+  },
+  {
+    "id": "22HBo1EI50U",
+    "sensers": [
+      {
+        "x": 1700,
+        "y": 415,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Conveyor Motion", "direction": "Right" },
+        "start_frame": 0
+      },
+      {
+        "x": 100,
+        "y": 600,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Conveyor Motion", "direction": "Forward" },
+        "start_frame": 0
+      }
+    ]
+  },
+  {
+    "id": "feFVo3Ssp_k",
+    "sensers": [
+      {
+        "x": 800,
+        "y": 600,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Conveyor Motion", "direction": "Backward" },
+        "start_frame": 1000
+      },
+      {
+        "x": 1300,
+        "y": 220,
+        "w": 25,
+        "h": 25,
+        "movement": {
+          "type": "Reciprocating Motion",
+          "direction": "Horizontal"
+        },
+        "start_frame": 1000
+      },
+      {
+        "x": 1400,
+        "y": 180,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Reciprocating Motion", "direction": "Vertical" },
+        "start_frame": 1000
+      },
+      {
+        "x": 1680,
+        "y": 190,
+        "w": 25,
+        "h": 25,
+        "movement": {
+          "type": "Reciprocating Motion",
+          "direction": "Horizontal"
+        },
+        "start_frame": 1000
+      }
+    ]
+  },
+  {
+    "id": "FMOuqx6s9aQ",
+    "sensers": [
+      {
+        "x": 800,
+        "y": 715,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Conveyor Motion", "direction": "Right" },
+        "start_frame": 0
+      },
+      {
+        "x": 1300,
+        "y": 400,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Conveyor Motion", "direction": "Left" },
+        "start_frame": 0
+      },
+      {
+        "x": 1400,
+        "y": 310,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Conveyor Motion", "direction": "Right" },
+        "start_frame": 0
+      }
+    ]
+  },
+  {
+    "id": "l5VyqMIaL7E",
+    "sensers": [
+      {
+        "x": 40,
+        "y": 675,
+        "w": 25,
+        "h": 25,
+        "movement": {
+          "type": "Reciprocating Motion",
+          "direction": "Horizontal"
+        },
+        "start_frame": 0
+      },
+      {
+        "x": 130,
+        "y": 515,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Blinking Motion", "direction": null },
+        "start_frame": 0
+      }
+    ]
+  },
+  {
+    "id": "8oFzkYH9A54",
+    "sensers": [
+      {
+        "x": 900,
+        "y": 600,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Conveyor Motion", "direction": "Right" },
+        "start_frame": 0
+      },
+      {
+        "x": 600,
+        "y": 50,
+        "w": 25,
+        "h": 25,
+        "movement": {
+          "type": "Rotary Motion",
+          "direction": "Counterclockwise"
+        },
+        "start_frame": 0
+      }
+    ]
+  },
+  {
+    "id": "mIFuCipTWkQ",
+    "sensers": [
+      {
+        "x": 200,
+        "y": 800,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Conveyor Motion", "direction": "Right" },
+        "start_frame": 0
+      },
+      {
+        "x": 330,
+        "y": 720,
+        "w": 25,
+        "h": 25,
+        "movement": {
+          "type": "Rotary Motion",
+          "direction": "Counterclockwise"
+        },
+        "start_frame": 0
+      },
+      {
+        "x": 1300,
+        "y": 455,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Conveyor Motion", "direction": "Left" },
+        "start_frame": 0
+      }
+    ]
+  },
+  {
+    "id": "L6rzLUJ1QoA",
+    "sensers": [
+      {
+        "x": 665,
+        "y": 350,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Conveyor Motion", "direction": "Forward" },
+        "start_frame": 0
+      },
+      {
+        "x": 900,
+        "y": 700,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Conveyor Motion", "direction": "Left" },
+        "start_frame": 0
+      },
+      {
+        "x": 1270,
+        "y": 330,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Reciprocating Motion", "direction": "Vertical" },
+        "start_frame": 0
+      }
+    ]
+  },
+  {
+    "id": "jkq3HWArjXg",
+    "sensers": [
+      {
+        "x": 1370,
+        "y": 700,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Conveyor Motion", "direction": "Forward" },
+        "start_frame": 0
+      },
+      {
+        "x": 680,
+        "y": 280,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Reciprocating Motion", "direction": "Vertical" },
+        "start_frame": 0
+      },
+      {
+        "x": 680,
+        "y": 425,
+        "w": 25,
+        "h": 25,
+        "movement": { "type": "Conveyor Motion", "direction": "Backward" },
+        "start_frame": 0
+      }
+    ]
+  }
 ]
