@@ -3,7 +3,7 @@ import argparse
 
 from tqdm import tqdm
 
-from modules.video_processing import save_cropped_videos
+from pseudo_sensing.modules.crop_regions import crop_regions
 from modules.utils import load_samples_json
 
 def preprocess_sample(sample):
@@ -13,7 +13,7 @@ def preprocess_sample(sample):
 
     os.makedirs(f"sample_video/cropped/{sample['id']}", exist_ok=True)
 
-    save_cropped_videos(video_path, regions, output_files)
+    crop_regions(video_path, regions, output_files)
 
 
 def preprocess_all_samples(samples):

@@ -4,7 +4,7 @@ import cv2
 from tqdm import tqdm
 
 
-def save_cropped_videos(video_path, regions, output_files):
+def crop_regions(video_path, regions, output_files):
     """
     Save cropped regions of the video to separate files.
 
@@ -24,7 +24,7 @@ def save_cropped_videos(video_path, regions, output_files):
 
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     fps = video.get(cv2.CAP_PROP_FPS)
-    total_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))  # ビデオの総フレーム数を取得
+    total_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
 
     writers = []
     for i, region in enumerate(regions):
@@ -35,7 +35,6 @@ def save_cropped_videos(video_path, regions, output_files):
         writer = cv2.VideoWriter(output_file, fourcc, fps, cropped_frame_size)
         writers.append(writer)
 
-    # tqdmの設定
     with tqdm(total=total_frames, desc="Processing Video") as pbar:
         while True:
             ret, frame = video.read()
@@ -47,7 +46,7 @@ def save_cropped_videos(video_path, regions, output_files):
                 cropped_frame = frame[y:y+h, x:x+w]
                 writers[i].write(cropped_frame)
 
-            pbar.update(1)  # フレームごとに進捗を更新
+            pbar.update(1)
 
     for writer in writers:
         writer.release()
