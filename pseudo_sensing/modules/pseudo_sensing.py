@@ -3,10 +3,25 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import pywt
+from tqdm import tqdm
+from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
 
 from modules.utils import load_video_frames, save_frames_as_video
 
-def determine_sensing_points(video_path, output_name, fps, start_frame, duration_sec, filter_size=(4, 4), vobose_visualization=False):
+def determine_sensing_points(
+        video_path, 
+        output_name, 
+        fps, 
+        start_frame, 
+        duration_sec, 
+        filter_size=(4, 4),
+        save_grayscale=False,
+        save_filtered=False,
+        save_waveforms=False,
+        save_wavelets=False,
+        save_cluster_grid=False
+    ):
     """
     Determine sensing points for the video.
     
@@ -17,7 +32,11 @@ def determine_sensing_points(video_path, output_name, fps, start_frame, duration
     start_frame: int, frame number to start sensing from
     duration_sec: int, duration of the sensing in seconds
     filter_size: tuple, size of the filter to apply (width, height), default (4, 4)
-    vobose_visualization: bool, whether to save verbose visualization, default False
+    save_grayscale: bool, save the grayscale video
+    save_filtered: bool, save the filtered video
+    save_waveforms: bool, save the waveforms
+    save_wavelets: bool, save the wavelets
+    save_cluster_grid: bool, save the cluster grid
 
     Returns:
     sensing_points: list, list of dictionaries containing the sensing points
@@ -28,22 +47,37 @@ def determine_sensing_points(video_path, output_name, fps, start_frame, duration
     duration_frames = int(np.ceil(duration_sec * fps))
     frames = load_video_frames(video_path, start_frame, duration_frames)
     frames = to_grayscale(frames)
-    if vobose_visualization:
+    if save_grayscale:
         save_frames_as_video(frames, os.path.join(output_dir, "grayscale.mp4"), fps)
     frames = mean_filter(frames, filter_size)
-    if vobose_visualization:
+    if save_filtered:
         save_frames_as_video(frames, os.path.join(output_dir, "filtered.mp4"), fps)
+    if save_waveforms:
         save_plot_waveform(frames, output_dir, start_frame, fps)
     
-    os.makedirs(os.path.join(output_dir, "wavelets"), exist_ok=True)
-    for i in range(frames.shape[1]):
-        for j in range(frames.shape[2]):
+    rows, cols = frames.shape[1], frames.shape[2]
+    wavelets_array = []
+    for i in tqdm(range(rows)):
+        for j in range(cols):
             coefficients, freqs = wavelet_transform(
                 frames[:, i, j],
                 sampling_fps=fps, 
                 start_frame=start_frame,
-                output_file=os.path.join(output_dir, "wavelets", f"wavelet_{i}_{j}.png") if vobose_visualization or True else None
+                cut_duration=10,
+                output_file=os.path.join(output_dir, "wavelets", f"wavelet_{i}_{j}.png") if save_wavelets else None
             )
+            wavelets_array.append(coefficients)
+    wavelets_array = np.array(wavelets_array)
+    wavelets_freqs = freqs
+    
+    print("Performing PCA and Clustering on Wavelets")
+    wavelets_pca_array = pca_wavelets(wavelets_array)
+    wavelets_cluster_labels = clustering_wavelets(wavelets_pca_array)
+
+    if save_cluster_grid:
+        save_cluster_grid(output_dir, labels=wavelets_cluster_labels, rows=rows, cols=cols)
+    
+    print("Determining Sensing Points")
 
     sensing_points = []
     return sensing_points
@@ -119,7 +153,7 @@ def save_plot_waveform(frames, output_dir, start_frame=0, fps=30):
             plt.savefig(filename)
             plt.close()
 
-def wavelet_transform(signal, sampling_fps, start_frame, output_file=None):
+def wavelet_transform(signal, sampling_fps, start_frame, cut_duration, output_file=None):
     """
     Perform Continuous Wavelet Transform (CWT) and plot the scaleogram.
     
@@ -127,6 +161,7 @@ def wavelet_transform(signal, sampling_fps, start_frame, output_file=None):
     signal: 1D np.array, the signal to analyze
     sampling_fps: int, the sampling frequency of the signal
     start_frame: int, frame number to start sensing from
+    cut_duration: int, duration to cut from the start and end of the signal
     output_file: str, path to save the scaleogram plot
     
     Returns:
@@ -147,10 +182,15 @@ def wavelet_transform(signal, sampling_fps, start_frame, output_file=None):
     
     coefficients, freqs = pywt.cwt(signal, scales, wavelet, dt)
 
-    start_time = start_frame / sampling_fps
-    end_time = (start_frame + len(signal)) / sampling_fps
+    # cut boundary effects
+    cut_frames = int(cut_duration * sampling_fps)
+    coefficients = coefficients[:, cut_frames:-cut_frames]
+
+    start_time = (start_frame + cut_frames) / sampling_fps
+    end_time = (start_frame + len(signal) - cut_frames) / sampling_fps
 
     if output_file:
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
         plt.figure(figsize=(10, 6))
         plt.imshow(np.abs(coefficients[::-1, :]), extent=[start_time, end_time, 0, len(freqs)], 
                 aspect='auto', vmax=150, vmin=0, cmap='jet')
@@ -166,3 +206,55 @@ def wavelet_transform(signal, sampling_fps, start_frame, output_file=None):
         plt.close()
 
     return coefficients, freqs
+
+def pca_wavelets(wavelets_array):
+    """
+    Perform PCA on the wavelets grid.
+    
+    Args:
+    wavelets_array: ndarray, array containing the wavelets coefficients
+    
+    Returns:
+    wavelets_pca_grid: dict, dictionary containing the PCA components
+    """
+    # prepare data for PCA
+    wavelets_array = wavelets_array.reshape(wavelets_array.shape[0], -1)
+    wavelets_array = wavelets_array - np.mean(wavelets_array, axis=0) / np.std(wavelets_array, axis=0)
+
+    pca = PCA(n_components=100)
+    wavelets_pca_array = pca.fit_transform(wavelets_array)
+    return wavelets_pca_array
+
+def clustering_wavelets(wavelets_pca_array):
+    """
+    Perform clustering on the wavelets grid.
+    
+    Args:
+    wavelets_pca_array: ndarray, array containing the PCA components
+    
+    Returns:
+    cluster_labels: ndarray, array containing the cluster labels
+    """
+
+    kmeans = KMeans(n_clusters=3, random_state=0)
+    cluster_labels = kmeans.fit_predict(wavelets_pca_array)
+    return cluster_labels
+
+def save_cluster_grid(output_dir, labels, rows, cols):
+    """
+    Save the cluster grid as an image.
+    
+    Args:
+    output_dir: str, path to save the image
+    labels: ndarray, array containing the cluster labels
+    rows: int, number of rows in the grid
+    cols: int, number of columns in the grid
+    """
+
+    cluster_grid = labels.reshape(rows, cols)
+    plt.figure(figsize=(8, 8))
+    plt.imshow(cluster_grid, cmap='viridis')
+    plt.colorbar()
+    plt.title('Cluster Grid')
+    plt.savefig(os.path.join(output_dir, 'cluster_grid.png'))
+    plt.close()
