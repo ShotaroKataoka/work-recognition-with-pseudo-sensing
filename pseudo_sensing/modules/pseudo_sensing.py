@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import matplotlib.pyplot as plt
+import pywt
 
 from modules.utils import load_video_frames, save_frames_as_video
 
@@ -24,7 +25,7 @@ def determine_sensing_points(video_path, output_name, fps, start_frame, duration
     
     output_dir = os.path.join("pseudo_sensing_output", output_name)
 
-    duration_frames = int(duration_sec * fps)
+    duration_frames = int(np.ceil(duration_sec * fps))
     frames = load_video_frames(video_path, start_frame, duration_frames)
     frames = to_grayscale(frames)
     if vobose_visualization:
@@ -34,6 +35,16 @@ def determine_sensing_points(video_path, output_name, fps, start_frame, duration
         save_frames_as_video(frames, os.path.join(output_dir, "filtered.mp4"), fps)
         save_plot_waveform(frames, output_dir, start_frame, fps)
     
+    os.makedirs(os.path.join(output_dir, "wavelets"), exist_ok=True)
+    for i in range(frames.shape[1]):
+        for j in range(frames.shape[2]):
+            coefficients, freqs = wavelet_transform(
+                frames[:, i, j],
+                sampling_fps=fps, 
+                start_frame=start_frame,
+                output_file=os.path.join(output_dir, "wavelets", f"wavelet_{i}_{j}.png") if vobose_visualization or True else None
+            )
+
     sensing_points = []
     return sensing_points
 
@@ -78,6 +89,7 @@ def mean_filter(frames, filter_size):
     
     return mean_filtered_frames
 
+
 def save_plot_waveform(frames, output_dir, start_frame=0, fps=30):
     """
     Plot all of the temporal change of each pixel in a video
@@ -106,3 +118,51 @@ def save_plot_waveform(frames, output_dir, start_frame=0, fps=30):
             plt.xticks(xticks)
             plt.savefig(filename)
             plt.close()
+
+def wavelet_transform(signal, sampling_fps, start_frame, output_file=None):
+    """
+    Perform Continuous Wavelet Transform (CWT) and plot the scaleogram.
+    
+    Args:
+    signal: 1D np.array, the signal to analyze
+    sampling_fps: int, the sampling frequency of the signal
+    start_frame: int, frame number to start sensing from
+    output_file: str, path to save the scaleogram plot
+    
+    Returns:
+    coefficients: 2D np.array, the CWT coefficients
+    freqs: 1D np.array, the frequencies corresponding to the scales
+    """
+
+    wavelet = 'morl'
+    dt = 1 / sampling_fps
+
+    scale = sampling_fps / 30
+    min_scale = 1 * scale
+    max_scale = 150 * scale
+    ds = 0.5 * scale
+    
+    scales = np.arange(min_scale, max_scale+ds, ds)
+    scales = np.geomspace(min_scale, max_scale, num=len(scales))
+    
+    coefficients, freqs = pywt.cwt(signal, scales, wavelet, dt)
+
+    start_time = start_frame / sampling_fps
+    end_time = (start_frame + len(signal)) / sampling_fps
+
+    if output_file:
+        plt.figure(figsize=(10, 6))
+        plt.imshow(np.abs(coefficients[::-1, :]), extent=[start_time, end_time, 0, len(freqs)], 
+                aspect='auto', vmax=150, vmin=0, cmap='jet')
+        plt.colorbar(label='Magnitude')
+        plt.ylabel('Frequency [Hz]')
+        yticks = np.linspace(0, len(freqs) - 1, num=10)
+        ytick_labels = np.round(np.interp(yticks, np.arange(len(freqs)), freqs), 2)
+        plt.yticks(yticks, ytick_labels)
+        plt.xlabel('Time [sec]')
+        plt.title('Wavelet Transform (Scaleogram)')
+        plt.tight_layout()
+        plt.savefig(output_file)
+        plt.close()
+
+    return coefficients, freqs

@@ -1,4 +1,3 @@
-from glob import glob
 import os
 import argparse
 
@@ -17,8 +16,9 @@ def run(sample, verbose=False):
     video_dir = f"sample_video/cropped"
     for i, sensor in enumerate(sample['sensors']):
         video = os.path.join(video_dir, f"{sample['id']}/{i}.mp4")
-        DURATION_SECONDS = 20
+        DURATION_SECONDS = 120
         output_name = f"{sample['id']}_{i}_{sensor['movement']['type']}_{sensor['movement']['direction']}"
+        print(f"Processing Sensor {i} of Sample {sample['id']}")
         determine_sensing_points(
             video, 
             output_name, 
@@ -28,7 +28,7 @@ def run(sample, verbose=False):
             filter_size=(4, 4), 
             vobose_visualization=verbose
         )
-
+    
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--sample_id", type=str, default=None, help="ID of the sample to preprocess")
