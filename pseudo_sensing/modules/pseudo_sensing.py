@@ -16,6 +16,7 @@ def determine_sensing_points(
         start_frame, 
         duration_sec, 
         filter_size=(4, 4),
+        save_all=False,
         save_grayscale=False,
         save_filtered=False,
         save_waveforms=False,
@@ -32,6 +33,7 @@ def determine_sensing_points(
     start_frame: int, frame number to start sensing from
     duration_sec: int, duration of the sensing in seconds
     filter_size: tuple, size of the filter to apply (width, height), default (4, 4)
+    save_all: bool, save all the intermediate
     save_grayscale: bool, save the grayscale video
     save_filtered: bool, save the filtered video
     save_waveforms: bool, save the waveforms
@@ -47,12 +49,12 @@ def determine_sensing_points(
     duration_frames = int(np.ceil(duration_sec * fps))
     frames = load_video_frames(video_path, start_frame, duration_frames)
     frames = to_grayscale(frames)
-    if save_grayscale:
+    if save_grayscale or save_all:
         save_frames_as_video(frames, os.path.join(output_dir, "grayscale.mp4"), fps)
     frames = mean_filter(frames, filter_size)
-    if save_filtered:
+    if save_filtered or save_all:
         save_frames_as_video(frames, os.path.join(output_dir, "filtered.mp4"), fps)
-    if save_waveforms:
+    if save_waveforms or save_all:
         save_plot_waveform(frames, output_dir, start_frame, fps)
     
     rows, cols = frames.shape[1], frames.shape[2]
@@ -64,21 +66,38 @@ def determine_sensing_points(
                 sampling_fps=fps, 
                 start_frame=start_frame,
                 cut_duration=10,
-                output_file=os.path.join(output_dir, "wavelets", f"wavelet_{i}_{j}.png") if save_wavelets else None
+                output_file=os.path.join(output_dir, "wavelets", f"wavelet_{i}_{j}.png") if save_wavelets or save_all else None
             )
             wavelets_array.append(coefficients)
     wavelets_array = np.array(wavelets_array)
-    wavelets_freqs = freqs
+    wavelets_freqs = np.append(freqs, 0.0)
     
-    print("Performing PCA and Clustering on Wavelets")
-    wavelets_pca_array = pca_wavelets(wavelets_array)
-    wavelets_cluster_labels = clustering_wavelets(wavelets_pca_array)
+    print("Performing feat extraction and Clustering on Wavelets")
+    wavelets_feat_array = pca_wavelets(wavelets_array, n_components=50)
+    wavelets_cluster_labels = clustering_wavelets(wavelets_feat_array)
 
-    if save_cluster_grid:
-        save_cluster_grid(output_dir, labels=wavelets_cluster_labels, rows=rows, cols=cols)
+    if save_cluster_grid or save_all:
+        save_cluster_grid_image(output_dir, labels=wavelets_cluster_labels, rows=rows, cols=cols)
     
     print("Determining Sensing Points")
+    wavelets_means, wavelets_stds = calculate_stationarity_score(wavelets_array, wavelets_freqs)
+    
+    print("Visualizing t-SNE and Clustering Results")
+    import mplcursors
+    wavelets_tsne_array = tsne_wavelets(wavelets_array, n_components=2)
+    plt.figure(figsize=(8, 8))
+    scatter = plt.scatter(wavelets_tsne_array[:, 0], wavelets_tsne_array[:, 1], c=wavelets_cluster_labels, cmap='viridis')
+    plt.colorbar()
+    plt.title('t-SNE of Wavelets with Clustering')
+    cursor = mplcursors.cursor(scatter, hover=True)
+    @cursor.connect("add")
+    def on_add(sel):
+        sel.annotation.set_text(f'Index: {sel.target.index} \nMean: {wavelets_means[sel.target.index]:.2f} \nStd: {wavelets_stds[sel.target.index]:.2f}')
 
+    plt.show()
+    exit()
+
+    
     sensing_points = []
     return sensing_points
 
@@ -207,7 +226,7 @@ def wavelet_transform(signal, sampling_fps, start_frame, cut_duration, output_fi
 
     return coefficients, freqs
 
-def pca_wavelets(wavelets_array):
+def pca_wavelets(wavelets_array, n_components=100):
     """
     Perform PCA on the wavelets grid.
     
@@ -217,13 +236,29 @@ def pca_wavelets(wavelets_array):
     Returns:
     wavelets_pca_grid: dict, dictionary containing the PCA components
     """
-    # prepare data for PCA
     wavelets_array = wavelets_array.reshape(wavelets_array.shape[0], -1)
     wavelets_array = wavelets_array - np.mean(wavelets_array, axis=0) / np.std(wavelets_array, axis=0)
 
-    pca = PCA(n_components=100)
+    pca = PCA(n_components=n_components, random_state=0)
     wavelets_pca_array = pca.fit_transform(wavelets_array)
     return wavelets_pca_array
+
+def tsne_wavelets(wavelets_array, n_components=3):
+    """
+    Perform t-SNE on the wavelets grid.
+    
+    Args:
+    wavelets_array: ndarray, array containing the wavelets coefficients
+
+    Returns:
+    wavelets_tsne_array: ndarray, array containing the t-SNE components
+    """
+    from sklearn.manifold import TSNE
+
+    tsne = TSNE(n_components=n_components, random_state=0)
+    wavelets_array = wavelets_array.reshape(wavelets_array.shape[0], -1)
+    wavelets_tsne_array = tsne.fit_transform(wavelets_array)
+    return wavelets_tsne_array
 
 def clustering_wavelets(wavelets_pca_array):
     """
@@ -240,7 +275,7 @@ def clustering_wavelets(wavelets_pca_array):
     cluster_labels = kmeans.fit_predict(wavelets_pca_array)
     return cluster_labels
 
-def save_cluster_grid(output_dir, labels, rows, cols):
+def save_cluster_grid_image(output_dir, labels, rows, cols):
     """
     Save the cluster grid as an image.
     
@@ -258,3 +293,46 @@ def save_cluster_grid(output_dir, labels, rows, cols):
     plt.title('Cluster Grid')
     plt.savefig(os.path.join(output_dir, 'cluster_grid.png'))
     plt.close()
+
+def get_max_freq_index(coefficients, threshold=30):
+    """
+    Get the index of the frequency component with the highest magnitude.
+    
+    Args:
+    coefficients: 2D np.array, the CWT coefficients
+    threshold: int, the threshold to filter out noise
+    
+    Returns:
+    max_freq_index: list, list of the indices of the maximum frequency components
+    """
+    coefficients = np.where(np.abs(coefficients) < threshold, 0, coefficients)
+    max_freq_index = []
+    for col in range(coefficients.shape[1]):
+        if np.all(coefficients[:, col] == 0):
+            max_freq_index.append(-1)
+        else:
+            max_freq_index.append(np.argmax(np.abs(coefficients[:, col])))
+
+    return max_freq_index
+
+def calculate_stationarity_score(wavelets_array, wavelet_freqs):
+    """
+    Calculate the stationarity score for each pixel.
+    
+    Args:
+    wavelets_array: ndarray, array containing the wavelets coefficients
+    
+    Returns:
+    means: ndarray, array containing the means
+    stds: ndarray, array containing the standard deviations
+    """
+    means = []
+    stds = []
+    for i in range(wavelets_array.shape[0]):
+        max_freq_indices = get_max_freq_index(wavelets_array[i])
+        max_freqs = wavelet_freqs[max_freq_indices]
+        means.append(np.mean(max_freqs))
+        stds.append(np.std(max_freqs))
+    means = np.array(means)
+    stds = np.array(stds)
+    return means, stds

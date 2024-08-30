@@ -8,7 +8,7 @@
         "w": 40,
         "h": 40,
         "movement": { "type": "Conveyor Motion", "direction": "Forward" },
-        "start_frame": 10000
+        "start_frame": 750
       },
       {
         "x": 1150,
