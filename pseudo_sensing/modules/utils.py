@@ -3,6 +3,7 @@ import os
 
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
 def load_samples_json():
     """Load sample.json and sample_info.json and merge them.
