@@ -22,8 +22,6 @@ def run(
 
     video_dir = f"sample_video/cropped"
     for i, sensor in enumerate(sample['sensors']):
-        if i == 0:
-            continue
         video = os.path.join(video_dir, f"{sample['id']}/{i}.mp4")
         DURATION_SECONDS = 60
         output_name = f"{sample['id']}_{i}_{sensor['movement']['type']}_{sensor['movement']['direction']}"
