@@ -4,9 +4,11 @@ import numpy as np
 
 from modules.utils import load_video_frames
 from modules.wavelet.waveformalizer import waveformalizer
-from modules.wavelet.wavelet import get_wavelets_array, get_max_freq_index
-from modules.clustering.clustering import clustering_wavelets, save_cluster_grid_image, visualize_clustering
-from modules.clustering.feature_extractor import pca_wavelets, tsne_wavelets
+from modules.wavelet.wavelet import get_wavelets_array
+from modules.clustering.clustering import clustering_wavelets
+from modules.clustering.feature_extractor import pca_wavelets
+from modules.classifing_clusters.mean_std_method import classify_clusters
+from modules.classifing_clusters.utils import save_cluster_class, copy_wavelet_to_each_cluster_dir
 
 def determine_sensing_points(
         video_path, 
@@ -52,43 +54,16 @@ def determine_sensing_points(
     print("1. Performing Wavelet Transform")
     frames = load_video_frames(video_path, start_frame, duration_frames)
     frames = waveformalizer(frames, output_dir, fps, start_frame, filter_size=filter_size, save_grayscale=save_grayscale or save_all, save_filtered=save_filtered or save_all, save_waveforms=save_waveforms or save_all)
-    wavelets_array, wavelets_freqs = get_wavelets_array(frames, start_frame, fps, output_dir, save_wavelets=save_wavelets or save_all)
+    wavelets_array, wavelet_freqs = get_wavelets_array(frames, start_frame, fps, output_dir, save_wavelets=save_wavelets or save_all)
 
     print("2. Performing Clustering")
     wavelets_feat_array = pca_wavelets(wavelets_array, n_components=50)
     wavelets_cluster_labels = clustering_wavelets(wavelets_feat_array, output_dir, frames.shape[1], frames.shape[2], save_cluster_grid=save_cluster_grid or save_all, save_cluster_scater=save_cluster_scater or save_all)
     
     print("3. Performing Classifing Clusters")
-    wavelets_means, wavelets_stds = calculate_stationarity_score(wavelets_array, wavelets_freqs)
-    
-    print("Visualizing t-SNE and Clustering Results")
-    additional_info = [{"Mean": mean, "Std": std} for mean, std in zip(wavelets_means, wavelets_stds)]
-    visualize_clustering(wavelets_array, wavelets_cluster_labels, additional_info=additional_info, is_interactive=True)
-    exit()
-
+    cluster_class = classify_clusters(wavelets_array, wavelet_freqs, wavelets_cluster_labels)
+    save_cluster_class(wavelets_cluster_labels, cluster_class, output_dir, frames.shape[1], frames.shape[2], save_fig=True)
+    copy_wavelet_to_each_cluster_dir(output_dir, wavelets_cluster_labels, cluster_class, frames.shape[1], frames.shape[2])
     
     sensing_points = []
     return sensing_points
-
-
-def calculate_stationarity_score(wavelets_array, wavelet_freqs):
-    """
-    Calculate the stationarity score for each pixel.
-    
-    Args:
-    wavelets_array: ndarray, array containing the wavelets coefficients
-    
-    Returns:
-    means: ndarray, array containing the means
-    stds: ndarray, array containing the standard deviations
-    """
-    means = []
-    stds = []
-    for i in range(wavelets_array.shape[0]):
-        max_freq_indices = get_max_freq_index(wavelets_array[i])
-        max_freqs = wavelet_freqs[max_freq_indices]
-        means.append(np.mean(max_freqs))
-        stds.append(np.std(max_freqs))
-    means = np.array(means)
-    stds = np.array(stds)
-    return means, stds
