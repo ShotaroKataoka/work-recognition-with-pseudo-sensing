@@ -1,6 +1,46 @@
+import os
+
 import numpy as np
 
-def to_grayscale(frames):
+from modules.utils import save_frames_as_video, save_waveform_plot
+
+def waveformalizer(
+        frames, 
+        output_dir, 
+        fps, 
+        start_frame, 
+        filter_size=(4, 4),
+        save_grayscale=False,
+        save_filtered=False,
+        save_waveforms=False
+    ):
+    """
+    Perform waveformalization on the frames.
+
+    Args:
+    frames: ndarray, video frames
+    output_dir: str, path to save the output
+    fps: int, frames per second of the video
+    start_frame: int, frame number to start sensing from
+    filter_size: tuple, size of the filter to apply (width, height), default (4, 4)
+    save_grayscale: bool, save the grayscale video
+    save_filtered: bool, save the filtered video
+    save_waveforms: bool, save the waveforms
+
+    Returns:
+    frames: ndarray, waveformalized video frames
+    """
+    frames = _to_grayscale(frames)
+    if save_grayscale:
+        save_frames_as_video(frames, os.path.join(output_dir, "grayscale.mp4"), fps)
+    frames = _mean_filter(frames, filter_size)
+    if save_filtered:
+        save_frames_as_video(frames, os.path.join(output_dir, "filtered.mp4"), fps)
+    if save_waveforms:
+        save_waveform_plot(frames, output_dir, start_frame, fps)
+    return frames
+
+def _to_grayscale(frames):
     """
     Convert frames to grayscale.
     
@@ -13,7 +53,7 @@ def to_grayscale(frames):
     grayscale_frames = np.mean(frames, axis=-1)
     return grayscale_frames
 
-def mean_filter(frames, filter_size):
+def _mean_filter(frames, filter_size):
     """
     Apply filter to the frames.
     

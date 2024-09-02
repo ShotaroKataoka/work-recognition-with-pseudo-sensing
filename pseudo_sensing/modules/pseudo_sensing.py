@@ -2,8 +2,8 @@ import os
 
 import numpy as np
 
-from modules.utils import load_video_frames, save_frames_as_video, save_waveform_plot
-from modules.wavelet.waveformalizer import to_grayscale, mean_filter
+from modules.utils import load_video_frames
+from modules.wavelet.waveformalizer import waveformalizer
 from modules.wavelet.wavelet import get_wavelets_array, get_max_freq_index
 from modules.clustering.clustering import clustering_wavelets, save_cluster_grid_image, visualize_clustering
 from modules.clustering.feature_extractor import pca_wavelets, tsne_wavelets
@@ -20,7 +20,8 @@ def determine_sensing_points(
         save_filtered=False,
         save_waveforms=False,
         save_wavelets=False,
-        save_cluster_grid=False
+        save_cluster_grid=False,
+        save_cluster_scater=False
     ):
     """
     Determine sensing points for the video.
@@ -38,6 +39,7 @@ def determine_sensing_points(
     save_waveforms: bool, save the waveforms
     save_wavelets: bool, save the wavelets
     save_cluster_grid: bool, save the cluster grid
+    save_cluster_scater: bool, save the cluster scatter plot
 
     Returns:
     sensing_points: list, list of dictionaries containing the sensing points
@@ -46,31 +48,22 @@ def determine_sensing_points(
     output_dir = os.path.join("pseudo_sensing_output", output_name)
 
     duration_frames = int(np.ceil(duration_sec * fps))
-    frames = load_video_frames(video_path, start_frame, duration_frames)
-    frames = to_grayscale(frames)
-    if save_grayscale or save_all:
-        save_frames_as_video(frames, os.path.join(output_dir, "grayscale.mp4"), fps)
-    frames = mean_filter(frames, filter_size)
-    if save_filtered or save_all:
-        save_frames_as_video(frames, os.path.join(output_dir, "filtered.mp4"), fps)
-    if save_waveforms or save_all:
-        save_waveform_plot(frames, output_dir, start_frame, fps)
-    
-    wavelets_array, wavelets_freqs = get_wavelets_array(frames, start_frame, fps, output_dir, save_wavelets=save_wavelets, save_all=save_all)
-    
-    print("Performing feat extraction and Clustering on Wavelets")
-    wavelets_feat_array = pca_wavelets(wavelets_array, n_components=50)
-    wavelets_cluster_labels = clustering_wavelets(wavelets_feat_array)
 
-    if save_cluster_grid or save_all:
-        save_cluster_grid_image(output_dir, labels=wavelets_cluster_labels, rows=frames.shape[1], cols=frames.shape[2])
+    print("1. Performing Wavelet Transform")
+    frames = load_video_frames(video_path, start_frame, duration_frames)
+    frames = waveformalizer(frames, output_dir, fps, start_frame, filter_size=filter_size, save_grayscale=save_grayscale or save_all, save_filtered=save_filtered or save_all, save_waveforms=save_waveforms or save_all)
+    wavelets_array, wavelets_freqs = get_wavelets_array(frames, start_frame, fps, output_dir, save_wavelets=save_wavelets or save_all)
+
+    print("2. Performing Clustering")
+    wavelets_feat_array = pca_wavelets(wavelets_array, n_components=50)
+    wavelets_cluster_labels = clustering_wavelets(wavelets_feat_array, output_dir, frames.shape[1], frames.shape[2], save_cluster_grid=save_cluster_grid or save_all, save_cluster_scater=save_cluster_scater or save_all)
     
-    print("Determining Sensing Points")
+    print("3. Performing Classifing Clusters")
     wavelets_means, wavelets_stds = calculate_stationarity_score(wavelets_array, wavelets_freqs)
     
     print("Visualizing t-SNE and Clustering Results")
     additional_info = [{"Mean": mean, "Std": std} for mean, std in zip(wavelets_means, wavelets_stds)]
-    visualize_clustering(wavelets_array, wavelets_cluster_labels, additional_info=additional_info)
+    visualize_clustering(wavelets_array, wavelets_cluster_labels, additional_info=additional_info, is_interactive=True)
     exit()
 
     

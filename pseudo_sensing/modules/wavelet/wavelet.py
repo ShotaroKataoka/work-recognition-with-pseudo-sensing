@@ -5,7 +5,38 @@ import numpy as np
 import pywt
 from tqdm import tqdm
 
-def wavelet_transform(signal, sampling_fps, start_frame, cut_duration, output_file=None):
+def get_wavelets_array(frames, start_frame, fps, output_dir, save_wavelets=False):
+    """
+    Get the wavelets array from the frames.
+
+    Args:
+    frames: ndarray, video frames
+    start_frame: int, frame number to start sensing from
+    fps: int, frames per second of the video
+    output_dir: str, path to save the output
+    save_wavelets: bool, save the wavelets
+
+    Returns:
+    wavelets_array: ndarray, array containing the wavelets coefficients
+    wavelets_freqs: ndarray, array containing the frequencies corresponding to the scales
+    """
+    wavelets_array = []
+    rows, cols = frames.shape[1:]
+    for i in tqdm(range(rows)):
+        for j in range(cols):
+            coefficients, freqs = _wavelet_transform(
+                frames[:, i, j],
+                sampling_fps=fps, 
+                start_frame=start_frame,
+                cut_duration=10,
+                output_file=os.path.join(output_dir, "wavelets", f"wavelet_{i}_{j}.png") if save_wavelets else None
+            )
+            wavelets_array.append(coefficients)
+    wavelets_array = np.array(wavelets_array)
+    wavelets_freqs = np.append(freqs, 0.0)
+    return wavelets_array, wavelets_freqs
+
+def _wavelet_transform(signal, sampling_fps, start_frame, cut_duration, output_file=None):
     """
     Perform Continuous Wavelet Transform (CWT) and plot the scaleogram.
     
@@ -58,23 +89,6 @@ def wavelet_transform(signal, sampling_fps, start_frame, cut_duration, output_fi
         plt.close()
 
     return coefficients, freqs
-
-def get_wavelets_array(frames, start_frame, fps, output_dir, save_wavelets=False, save_all=False):
-    wavelets_array = []
-    rows, cols = frames.shape[1:]
-    for i in tqdm(range(rows)):
-        for j in range(cols):
-            coefficients, freqs = wavelet_transform(
-                frames[:, i, j],
-                sampling_fps=fps, 
-                start_frame=start_frame,
-                cut_duration=10,
-                output_file=os.path.join(output_dir, "wavelets", f"wavelet_{i}_{j}.png") if save_wavelets or save_all else None
-            )
-            wavelets_array.append(coefficients)
-    wavelets_array = np.array(wavelets_array)
-    wavelets_freqs = np.append(freqs, 0.0)
-    return wavelets_array, wavelets_freqs
 
 def get_max_freq_index(coefficients, threshold=30):
     """

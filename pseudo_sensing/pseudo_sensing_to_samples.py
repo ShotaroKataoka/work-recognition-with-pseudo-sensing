@@ -18,12 +18,7 @@ def run(
     args: argparse.Namespace, arguments
     """
 
-    save_all = args.save_all
-    save_grayscale = args.save_grayscale
-    save_filtered = args.save_filtered
-    save_waveforms = args.save_waveforms
-    save_wavelets = args.save_wavelets
-    save_cluster_grid = args.save_cluster_grid
+
 
     video_dir = f"sample_video/cropped"
     for i, sensor in enumerate(sample['sensors']):
@@ -38,12 +33,13 @@ def run(
             sensor['start_frame'], 
             DURATION_SECONDS, 
             filter_size=(4, 4), 
-            save_all=save_all,
-            save_grayscale=save_grayscale,
-            save_filtered=save_filtered,
-            save_waveforms=save_waveforms,
-            save_wavelets=save_wavelets,
-            save_cluster_grid=save_cluster_grid
+            save_all=args.save_all,
+            save_grayscale=args.save_grayscale,
+            save_filtered=args.save_filtered,
+            save_waveforms=args.save_waveforms,
+            save_wavelets=args.save_wavelets,
+            save_cluster_grid=args.save_cluster_grid,
+            save_cluster_scater=args.save_cluster_scater
         )
     
 if __name__ == "__main__":
@@ -56,6 +52,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--save_waveforms", action="store_true", help="Save the waveforms")
     arg_parser.add_argument("--save_wavelets", action="store_true", help="Save the wavelets")
     arg_parser.add_argument("--save_cluster_grid", action="store_true", help="Save the cluster grid")
+    arg_parser.add_argument("--save_cluster_scater", action="store_true", help="Save the cluster scatter plot")
     args = arg_parser.parse_args()
 
     samples = load_samples_json()
