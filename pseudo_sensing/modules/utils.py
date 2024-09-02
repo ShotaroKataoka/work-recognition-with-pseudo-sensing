@@ -101,3 +101,32 @@ def save_frames_as_video(frames, output_path, fps=30):
         out.write(frame)
     
     out.release()
+
+def save_waveform_plot(frames, output_dir, start_frame=0, fps=30):
+    """
+    Plot all of the temporal change of each pixel in a video
+    y-axis: pixel value (0-255)
+    
+    Args:
+    frames: ndarray, video frames
+    output_dir: str, path to save the plots
+    start_frame: int, frame number to start sensing from
+    fps: int, frames per second of the video
+    """
+    
+    n_frames, frame_height, frame_width = frames.shape
+
+    for i in range(frame_height):
+        for j in range(frame_width):
+            filename = os.path.join(output_dir, "waveforms", f"pixel_{i}_{j}.png")
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
+            time_axis = np.arange(start_frame, start_frame + n_frames) / fps
+            plt.plot(time_axis, frames[:, i, j])
+            plt.xlabel("Time (s)")
+            plt.ylabel("Pixel Value")
+            plt.ylim(0, 255)
+            plt.title(f"Temporal Change of Pixel ({i}, {j})")
+            xticks = np.arange(start_frame // fps, (start_frame + n_frames) // fps + 3, 5)
+            plt.xticks(xticks)
+            plt.savefig(filename)
+            plt.close()
