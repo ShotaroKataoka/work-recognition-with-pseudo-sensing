@@ -54,8 +54,9 @@ def determine_sensing_points(
     print("1. Performing Wavelet Transform")
     frames = load_video_frames(video_path, start_frame, duration_frames)
     frames = waveformalizer(frames, output_dir, fps, start_frame, filter_size=filter_size, save_grayscale=save_grayscale or save_all, save_filtered=save_filtered or save_all, save_waveforms=save_waveforms or save_all)
+    
     wavelets_array, wavelet_freqs = get_wavelets_array(frames, start_frame, fps, output_dir, save_wavelets=save_wavelets or save_all)
-
+    
     print("2. Performing Clustering")
     wavelets_feat_array = pca_wavelets(wavelets_array, n_components=50)
     wavelets_cluster_labels = clustering_wavelets(wavelets_feat_array, output_dir, frames.shape[1], frames.shape[2], save_cluster_grid=save_cluster_grid or save_all, save_cluster_scater=save_cluster_scater or save_all)

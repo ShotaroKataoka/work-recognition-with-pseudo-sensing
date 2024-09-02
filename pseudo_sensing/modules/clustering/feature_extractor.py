@@ -8,12 +8,17 @@ def pca_wavelets(wavelets_array, n_components=100):
     
     Args:
     wavelets_array: ndarray, array containing the wavelets coefficients
+    n_components: int, number of components to keep
     
     Returns:
     wavelets_pca_grid: dict, dictionary containing the PCA components
     """
     wavelets_array = wavelets_array.reshape(wavelets_array.shape[0], -1)
-    wavelets_array = wavelets_array - np.mean(wavelets_array, axis=0) / np.std(wavelets_array, axis=0)
+    
+    epsilon=1e-6
+    mean = np.mean(wavelets_array, axis=0)
+    std = np.std(wavelets_array, axis=0) + epsilon
+    wavelets_array = (wavelets_array - mean) / std
 
     pca = PCA(n_components=n_components, random_state=0)
     wavelets_pca_array = pca.fit_transform(wavelets_array)
