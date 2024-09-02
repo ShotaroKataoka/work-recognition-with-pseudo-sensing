@@ -1,12 +1,12 @@
 import os
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 from modules.utils import load_video_frames, save_frames_as_video, save_waveform_plot
-from modules.frames import to_grayscale, mean_filter
-from modules.wavelet import get_wavelets_array, get_max_freq_index
-from modules.clustering import pca_wavelets, tsne_wavelets, clustering_wavelets, save_cluster_grid_image
+from modules.wavelet.waveformalizer import to_grayscale, mean_filter
+from modules.wavelet.wavelet import get_wavelets_array, get_max_freq_index
+from modules.clustering.clustering import clustering_wavelets, save_cluster_grid_image, visualize_clustering
+from modules.clustering.feature_extractor import pca_wavelets, tsne_wavelets
 
 def determine_sensing_points(
         video_path, 
@@ -69,18 +69,8 @@ def determine_sensing_points(
     wavelets_means, wavelets_stds = calculate_stationarity_score(wavelets_array, wavelets_freqs)
     
     print("Visualizing t-SNE and Clustering Results")
-    import mplcursors
-    wavelets_tsne_array = tsne_wavelets(wavelets_array, n_components=2)
-    plt.figure(figsize=(8, 8))
-    scatter = plt.scatter(wavelets_tsne_array[:, 0], wavelets_tsne_array[:, 1], c=wavelets_cluster_labels, cmap='viridis')
-    plt.colorbar()
-    plt.title('t-SNE of Wavelets with Clustering')
-    cursor = mplcursors.cursor(scatter, hover=True)
-    @cursor.connect("add")
-    def on_add(sel):
-        sel.annotation.set_text(f'Index: {sel.target.index} \nMean: {wavelets_means[sel.target.index]:.2f} \nStd: {wavelets_stds[sel.target.index]:.2f}')
-
-    plt.show()
+    additional_info = [{"Mean": mean, "Std": std} for mean, std in zip(wavelets_means, wavelets_stds)]
+    visualize_clustering(wavelets_array, wavelets_cluster_labels, additional_info=additional_info)
     exit()
 
     
