@@ -23,7 +23,7 @@ def determine_sensing_points(
         save_waveforms=False,
         save_wavelets=False,
         save_cluster_grid=False,
-        save_cluster_scater=False
+        save_cluster_scatter=False
     ):
     """
     Determine sensing points for the video.
@@ -41,7 +41,7 @@ def determine_sensing_points(
     save_waveforms: bool, save the waveforms
     save_wavelets: bool, save the wavelets
     save_cluster_grid: bool, save the cluster grid
-    save_cluster_scater: bool, save the cluster scatter plot
+    save_cluster_scatter: bool, save the cluster scatter plot
 
     Returns:
     sensing_points: list, list of dictionaries containing the sensing points
@@ -59,7 +59,7 @@ def determine_sensing_points(
     
     print("2. Performing Clustering")
     wavelets_feat_array = pca_wavelets(wavelets_array, n_components=50)
-    wavelets_cluster_labels = clustering_wavelets(wavelets_feat_array, output_dir, frames.shape[1], frames.shape[2], save_cluster_grid=save_cluster_grid or save_all, save_cluster_scater=save_cluster_scater or save_all)
+    wavelets_cluster_labels = clustering_wavelets(wavelets_feat_array, output_dir, frames.shape[1], frames.shape[2], save_cluster_grid=save_cluster_grid or save_all, save_cluster_scatter=save_cluster_scatter or save_all)
     
     print("3. Performing Classifing Clusters")
     cluster_class = classify_clusters(wavelets_array, wavelet_freqs, wavelets_cluster_labels)

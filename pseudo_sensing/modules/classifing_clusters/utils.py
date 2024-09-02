@@ -61,6 +61,10 @@ def copy_wavelet_to_each_cluster_dir(output_dir, wavelets_cluster_labels, cluste
     cols: int, number of columns in the grid
     """
     clusters_output_dir = os.path.join(output_dir, "clusters")
+    
+    # clean up the existing cluster directories
+    os.system(f'rm -rf "{clusters_output_dir}"')
+    
     for cluster_label in np.unique(wavelets_cluster_labels):
         cluster_dir = os.path.join(clusters_output_dir, cluster_class[cluster_label])
         os.makedirs(cluster_dir, exist_ok=True)

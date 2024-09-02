@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 from modules.clustering.feature_extractor import tsne_wavelets
 
-def clustering_wavelets(wavelets_pca_array, output_dir, rows, cols, save_cluster_grid=False, save_cluster_scater=False):
+def clustering_wavelets(wavelets_pca_array, output_dir, rows, cols, save_cluster_grid=False, save_cluster_scatter=False):
     """
     Perform clustering on the wavelets grid.
     
@@ -15,7 +15,7 @@ def clustering_wavelets(wavelets_pca_array, output_dir, rows, cols, save_cluster
     rows: int, number of rows in the grid
     cols: int, number of columns in the grid
     save_cluster_grid: bool, save the cluster grid
-    save_cluster_scater: bool, save the cluster scatter plot
+    save_cluster_scatter: bool, save the cluster scatter plot
     
     Returns:
     cluster_labels: ndarray, array containing the cluster labels
@@ -26,7 +26,7 @@ def clustering_wavelets(wavelets_pca_array, output_dir, rows, cols, save_cluster
     
     if save_cluster_grid:
         save_cluster_grid_image(output_dir, labels=cluster_labels, rows=rows, cols=cols)
-    if save_cluster_scater:
+    if save_cluster_scatter:
         visualize_clustering(wavelets_pca_array, cluster_labels, output_file=os.path.join(output_dir, 'cluster_scatter.png'))
         
     return cluster_labels
