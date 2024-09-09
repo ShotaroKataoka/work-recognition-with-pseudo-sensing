@@ -100,11 +100,11 @@ def save_sensors(output_dir, wavelets_cluster_labels, cluster_class, filter_size
     grids = {}
     for i in range(rows):
         for j in range(cols):
-            cluster_class = cluster_class[wavelets_cluster_labels[i * cols + j]]
+            cluster_class_grid = cluster_class[wavelets_cluster_labels[i * cols + j]]
             try:
-                grids[cluster_class] += [{'row': i, 'col': j}]
+                grids[cluster_class_grid] += [{'row': i, 'col': j}]
             except KeyError:
-                grids[cluster_class] = [{'row': i, 'col': j}]
+                grids[cluster_class_grid] = [{'row': i, 'col': j}]
     sensors = {
         'grids': grids,
         'filter_size': filter_size

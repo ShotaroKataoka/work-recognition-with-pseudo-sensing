@@ -18,8 +18,6 @@ def run(
     args: argparse.Namespace, arguments
     """
 
-
-
     video_dir = f"sample_video/cropped"
     for i, sensor in enumerate(sample['sensors']):
         video = os.path.join(video_dir, f"{sample['id']}/{i}.mp4")
@@ -28,6 +26,7 @@ def run(
         print(f"Processing Sensor {i} of Sample {sample['id']}")
         determine_sensing_points(
             video, 
+            args.experiment_name,
             output_name, 
             sample['info']['frame_rate'], 
             sensor['start_frame'], 
@@ -44,6 +43,7 @@ def run(
     
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument("--experiment_name", type=str, help="Name of the experiment", required=True)
     arg_parser.add_argument("--sample_id", type=str, default=None, help="ID of the sample to preprocess")
     arg_parser.add_argument("--all", action="store_true", help="Preprocess all samples")
     arg_parser.add_argument("--save_all", action="store_true", help="Save all the outputs")
