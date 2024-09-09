@@ -100,7 +100,7 @@ def save_experiment_settings(fps, start_frame, filter_size, duration_sec, video_
     wavelets_array = (wavelets_array - mean) / std"""}
     clustering = {'method': 'kmeans', 'params': {'n_clusters': 3, 'random_state': 0, 'n_init': 'auto'}}
     clustering_method = {'feature_extractor': feature_extractor, 'clustering': clustering}
-    
+
     classification_method = {'method': 'mean_std', 'description': """Stationary Grid: The cluster with the minimum mean frequency is the stationary grid.
 Detection Grid: The cluster with the maximum standard deviation of the frequency indices is the detection grid.
 Noise Grid: The remaining cluster is the noise grid."""}
@@ -112,6 +112,7 @@ Noise Grid: The remaining cluster is the noise grid."""}
         'clustering_method': clustering_method,
         'classification_method': classification_method
     }
+    os.makedirs(output_dir, exist_ok=True)
     with open(os.path.join(output_dir, 'exp_settings.json'), 'w') as f:
         json.dump(settings, f, indent=4)
 
