@@ -84,7 +84,7 @@ def copy_wavelet_to_each_cluster_dir(output_dir, wavelets_cluster_labels, cluste
                     wavelet_file = os.path.join(output_dir, "wavelets", f"wavelet_{i}_{j}.png")
                     os.system(f'cp "{wavelet_file}" "{cluster_dir}"')
 
-def save_sensors(output_dir, wavelets_cluster_labels, cluster_class, filter_size, rows, cols):
+def save_sensor(output_dir, wavelets_cluster_labels, cluster_class, filter_size, fps, rows, cols, mean_max_magnitudes):
     """
     Save the sensing points as a JSON file.
     
@@ -93,21 +93,40 @@ def save_sensors(output_dir, wavelets_cluster_labels, cluster_class, filter_size
     wavelets_cluster_labels: list, list of cluster labels
     cluster_class: list, list of cluster classes
     filter_size: tuple, size of the filter to apply (width, height)
+    fps: int, frames per second of the video
     rows: int, number of rows in the grid
     cols: int, number of columns in the grid
+    mean_max_magnitudes: list, list of mean maximum magnitudes
     """
 
     grids = {}
     for i in range(rows):
         for j in range(cols):
+            mean_max_magnitude = mean_max_magnitudes[i * cols + j]
             cluster_class_grid = cluster_class[wavelets_cluster_labels[i * cols + j]]
             try:
-                grids[cluster_class_grid] += [{'row': i, 'col': j}]
+                grids[cluster_class_grid] += [{'row': i, 'col': j, 'mean_max_magnitude': mean_max_magnitude}]
             except KeyError:
-                grids[cluster_class_grid] = [{'row': i, 'col': j}]
-    sensors = {
+                grids[cluster_class_grid] = [{'row': i, 'col': j, 'mean_max_magnitude': mean_max_magnitude}]
+    sensor = {
         'grids': grids,
-        'filter_size': filter_size
+        'filter_size': filter_size,
+        'fps': fps
     }
-    with open(os.path.join(output_dir, 'sensors.json'), 'w') as f:
-        json.dump(sensors, f, indent=4)
+    with open(os.path.join(output_dir, 'sensor.json'), 'w') as f:
+        json.dump(sensor, f, indent=4)
+
+def load_sensor(file_dir):
+    """
+    Load the sensing points from a JSON file.
+    
+    Args:
+    file_dir: str, path to the JSON file
+    
+    Returns:
+    dict, sensing points
+    """
+    file_path = os.path.join(file_dir, 'sensor.json')
+    with open(file_path, 'r') as f:
+        sensor = json.load(f)
+    return sensor

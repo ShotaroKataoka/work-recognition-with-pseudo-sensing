@@ -24,6 +24,18 @@ def run(
         DURATION_SECONDS = 60
         output_name = f"{sample['id']}_{i}_{sensor['movement']['type']}_{sensor['movement']['direction']}"
         print(f"Processing Sensor {i} of Sample {sample['id']}")
+        saves = {
+            'save_all': args.save_all,
+            'save_grayscale': args.save_grayscale,
+            'save_filtered': args.save_filtered,
+            'save_waveforms': args.save_waveforms,
+            'save_wavelets': args.save_wavelets,
+            'save_cluster_grid': args.save_cluster_grid,
+            'save_cluster_scatter': args.save_cluster_scatter
+        }
+        if args.skip_existing and os.path.exists(f"pseudo_sensing_output/{args.experiment_name}/{output_name}/exp_settings.json"):
+            print("Sensor already exists, skipping")
+            continue
         determine_sensing_points(
             video, 
             args.experiment_name,
@@ -32,13 +44,7 @@ def run(
             sensor['start_frame'], 
             DURATION_SECONDS, 
             filter_size=(4, 4), 
-            save_all=args.save_all,
-            save_grayscale=args.save_grayscale,
-            save_filtered=args.save_filtered,
-            save_waveforms=args.save_waveforms,
-            save_wavelets=args.save_wavelets,
-            save_cluster_grid=args.save_cluster_grid,
-            save_cluster_scatter=args.save_cluster_scatter
+            saves=saves
         )
     
 if __name__ == "__main__":
@@ -53,6 +59,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--save_wavelets", action="store_true", help="Save the wavelets")
     arg_parser.add_argument("--save_cluster_grid", action="store_true", help="Save the cluster grid")
     arg_parser.add_argument("--save_cluster_scatter", action="store_true", help="Save the cluster scatter plot")
+    arg_parser.add_argument("--skip_existing", action="store_true", help="Skip existing samples")
     args = arg_parser.parse_args()
 
     samples = load_samples_json()

@@ -69,6 +69,9 @@ def _wavelet_transform(signal, sampling_fps, start_frame, cut_duration, output_f
     cut_frames = int(cut_duration * sampling_fps)
     coefficients = coefficients[:, cut_frames:-cut_frames]
 
+    # add a row of zeros to the coefficients to match the length of freqs
+    coefficients = np.append(coefficients, np.zeros((1, coefficients.shape[1])), axis=0)
+
     start_time = (start_frame + cut_frames) / sampling_fps
     end_time = (start_frame + len(signal) - cut_frames) / sampling_fps
 
