@@ -132,13 +132,14 @@ Noise Grid: The remaining cluster is the noise grid."""}
     with open(os.path.join(output_dir, 'exp_settings.json'), 'w') as f:
         json.dump(settings, f, indent=4)
 
-def run_sensing(video_path, sensor_dir):
+def run_sensing(frames, sensor_dir):
     """
     Run the sensing for the video.
     
     Args:
-    video_path: str, path to the video file
+    frames: ndarray, frames of the video
     sensor_dir: str, path to the sensor directory
     """
     sensor = load_sensor(sensor_dir)
     fps = sensor['fps']
+    print(sensor)
