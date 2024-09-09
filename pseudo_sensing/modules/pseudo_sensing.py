@@ -8,7 +8,8 @@ from modules.wavelet.wavelet import get_wavelets_array
 from modules.clustering.clustering import clustering_wavelets
 from modules.clustering.feature_extractor import pca_wavelets
 from modules.classifing_clusters.mean_std_method import classify_clusters
-from modules.classifing_clusters.utils import save_cluster_class, copy_wavelet_to_each_cluster_dir
+from modules.classifing_clusters.utils import save_cluster_class, copy_wavelet_to_each_cluster_dir, save_sensors
+
 
 def determine_sensing_points(
         video_path, 
@@ -42,9 +43,6 @@ def determine_sensing_points(
     save_wavelets: bool, save the wavelets
     save_cluster_grid: bool, save the cluster grid
     save_cluster_scatter: bool, save the cluster scatter plot
-
-    Returns:
-    sensing_points: list, list of dictionaries containing the sensing points
     """
     
     output_dir = os.path.join("pseudo_sensing_output", output_name)
@@ -60,11 +58,14 @@ def determine_sensing_points(
     print("2. Performing Clustering")
     wavelets_feat_array = pca_wavelets(wavelets_array, n_components=50)
     wavelets_cluster_labels = clustering_wavelets(wavelets_feat_array, output_dir, frames.shape[1], frames.shape[2], save_cluster_grid=save_cluster_grid or save_all, save_cluster_scatter=save_cluster_scatter or save_all)
-    
+
     print("3. Performing Classifing Clusters")
     cluster_class = classify_clusters(wavelets_array, wavelet_freqs, wavelets_cluster_labels)
     save_cluster_class(wavelets_cluster_labels, cluster_class, output_dir, frames.shape[1], frames.shape[2], save_fig=True)
     copy_wavelet_to_each_cluster_dir(output_dir, wavelets_cluster_labels, cluster_class, frames.shape[1], frames.shape[2])
-    
-    sensing_points = []
-    return sensing_points
+
+    save_sensors(output_dir, wavelets_cluster_labels, cluster_class, filter_size, rows=frames.shape[1], cols=frames.shape[2])
+
+
+
+# def run_sensing(video_path, output_name, sensing_

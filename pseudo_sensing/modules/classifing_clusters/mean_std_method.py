@@ -1,6 +1,6 @@
 import numpy as np
 
-from modules.wavelet.wavelet import get_wavelets_array, get_max_freq_index
+from modules.wavelet.wavelet import get_max_freq_index
 
 def classify_clusters(wavelets_array, wavelet_freqs, wavelets_cluster_labels):
     """
@@ -12,11 +12,11 @@ def classify_clusters(wavelets_array, wavelet_freqs, wavelets_cluster_labels):
     wavelets_cluster_labels: ndarray, array containing the cluster labels
 
     Returns:
-    cluster_class: dict, dictionary containing the cluster classes
+    cluster_class: dict, dictionary containing the cluster classes; {cluster_label: "class", ...}
     """
-    wavelets_means, wavelets_stds = calculate_stationarity_score(wavelets_array, wavelet_freqs)
+    wavelets_freq_means, wavelets_index_stds = calculate_means_stds(wavelets_array, wavelet_freqs)
     mean_means, mean_stds, count = {0: 0, 1: 0, 2: 0}, {0: 0, 1: 0, 2: 0}, {0: 0, 1: 0, 2: 0}
-    for mean, std, cluster in zip(wavelets_means, wavelets_stds, wavelets_cluster_labels):
+    for mean, std, cluster in zip(wavelets_freq_means, wavelets_index_stds, wavelets_cluster_labels):
         mean_means[cluster] += mean
         mean_stds[cluster] += std
         count[cluster] += 1
@@ -39,7 +39,7 @@ def classify_clusters(wavelets_array, wavelet_freqs, wavelets_cluster_labels):
     
     return cluster_class
 
-def calculate_stationarity_score(wavelets_array, wavelet_freqs):
+def calculate_means_stds(wavelets_array, wavelet_freqs):
     """
     Calculate the stationarity score for each pixel.
     
@@ -55,8 +55,12 @@ def calculate_stationarity_score(wavelets_array, wavelet_freqs):
     for i in range(wavelets_array.shape[0]):
         max_freq_indices = get_max_freq_index(wavelets_array[i])
         max_freqs = wavelet_freqs[max_freq_indices]
+        # memo: Stationary Gridの判定には周波数の平均値を使う
         means.append(np.mean(max_freqs))
-        stds.append(np.std(max_freqs))
+        # memo: Noise GridとDetection Gridの判定にはインデックスの標準偏差を使う
+        #       周波数の標準偏差を使うと、周波数が小さいと標準偏差も小さくなりやすいので正しく判定できない
+        #       これはwavelet_freqsがindexに対して線形ではないため
+        stds.append(np.std(max_freq_indices))
     means = np.array(means)
     stds = np.array(stds)
     return means, stds
