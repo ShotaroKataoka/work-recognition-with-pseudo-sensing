@@ -132,7 +132,7 @@ Noise Grid: The remaining cluster is the noise grid."""}
     with open(os.path.join(output_dir, 'exp_settings.json'), 'w') as f:
         json.dump(settings, f, indent=4)
 
-def run_sensing(frames, sensor_dir):
+def run_sensing(video_path, sensor_dir):
     """
     Run the sensing for the video.
     
@@ -142,4 +142,64 @@ def run_sensing(frames, sensor_dir):
     """
     sensor = load_sensor(sensor_dir)
     fps = sensor['fps']
-    print(sensor)
+    filter_size = sensor['filter_size']
+    grids = sensor['grids']
+    
+    # start_frame = int(20*fps)
+    # start_frame = int(590*fps)
+    start_frame = int(1190*fps)
+    duration_frames = int(50*30)
+    frames = load_video_frames(video_path, start_frame, duration_frames)
+    
+    sensing_grids_indices = get_sensing_grid_index(grids, top_k=2)
+    frames = waveformalizer(frames, None, fps, 0, filter_size=filter_size)
+    wavelets_array, wavelet_freqs = get_wavelets_array(frames, 0, fps, None, exec_index=sensing_grids_indices, cut_duration=10)
+    max_freq_indicess = [get_max_freq_index(wavelets_array[i]) for i in range(wavelets_array.shape[0])]
+ 
+    speeds = []
+    for i in range(len(max_freq_indicess[0])):
+        speed = []
+        for max_freq_indices in max_freq_indicess:
+            speed.append(wavelet_freqs[max_freq_indices[i]])
+        median_value = np.median(speed)
+        speeds.append(median_value)
+
+    window_size = 3
+    filtered_speeds = []
+    for i in range(len(speeds)):
+        window_start = max(0, i - window_size // 2)
+        window_end = min(len(speeds), i + window_size // 2 + 1)
+        window = speeds[window_start:window_end]
+        median_value = np.median(window)
+        filtered_speeds.append(median_value)
+    # print(filtered_speeds)
+    print(np.mean(filtered_speeds) * 30)
+
+def get_sensing_grid_index(grids, top_k=None):
+    """
+    Select the top k sensing grids based on the mean max magnitude.
+
+    Args:
+    grids: list, list of sensing grids
+    top_k: int, number of top sensing grids to select
+
+    Returns:
+    ndarray: The selected sensing grid
+    """
+    detection_grids = grids['Detection Grid']
+    detection_grids = sorted(detection_grids, key=lambda x: x['mean_max_magnitude'], reverse=True)
+
+    all_grids = grids["Stationary Grid"] + detection_grids + grids["Noise Grid"]
+    num_cols = max([grid['col'] for grid in all_grids]) + 1
+
+    indices = []
+    for detection_grid in detection_grids:
+        row = detection_grid['row']
+        col = detection_grid['col']
+        indices.append(row * num_cols + col)
+    
+    if top_k is not None:
+        indices = indices[:top_k]
+    
+    return indices
+        

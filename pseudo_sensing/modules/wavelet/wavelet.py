@@ -5,7 +5,7 @@ import numpy as np
 import pywt
 from tqdm import tqdm
 
-def get_wavelets_array(frames, start_frame, fps, output_dir, save_wavelets=False):
+def get_wavelets_array(frames, start_frame, fps, output_dir, save_wavelets=False, exec_index=None, cut_duration=10):
     """
     Get the wavelets array from the frames.
 
@@ -15,6 +15,8 @@ def get_wavelets_array(frames, start_frame, fps, output_dir, save_wavelets=False
     fps: int, frames per second of the video
     output_dir: str, path to save the output
     save_wavelets: bool, save the wavelets
+    exec_index: list, list of the indices of the frames to execute
+    cut_duration: int, duration to cut from the start and end of the signal
 
     Returns:
     wavelets_array: ndarray, array containing the wavelets coefficients
@@ -24,11 +26,13 @@ def get_wavelets_array(frames, start_frame, fps, output_dir, save_wavelets=False
     rows, cols = frames.shape[1:]
     for i in tqdm(range(rows)):
         for j in range(cols):
+            if exec_index is not None and i * cols + j not in exec_index:
+                continue
             coefficients, freqs = _wavelet_transform(
                 frames[:, i, j],
                 sampling_fps=fps, 
                 start_frame=start_frame,
-                cut_duration=10,
+                cut_duration=cut_duration,
                 output_file=os.path.join(output_dir, "wavelets", f"wavelet_{i}_{j}.png") if save_wavelets else None
             )
             wavelets_array.append(coefficients)
@@ -67,7 +71,8 @@ def _wavelet_transform(signal, sampling_fps, start_frame, cut_duration, output_f
 
     # cut boundary effects
     cut_frames = int(cut_duration * sampling_fps)
-    coefficients = coefficients[:, cut_frames:-cut_frames]
+    if cut_frames > 0:
+        coefficients = coefficients[:, cut_frames:-cut_frames]
 
     # add a row of zeros to the coefficients to match the length of freqs
     coefficients = np.append(coefficients, np.zeros((1, coefficients.shape[1])), axis=0)

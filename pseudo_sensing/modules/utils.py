@@ -50,13 +50,13 @@ def load_samples_json():
                 merged.append(d)
     return merged
 
-def load_video_frames(video_path, start_frame, duration_frames, rgb=True):
+def load_video_frames(video_path, start_frame, duration_frames=None, rgb=True):
     """Load video frames as ndarray.
     
     Args:
         video_path (str): Path to the video file.
         start_frame (int): Frame number to start sensing from.
-        duration_frames (int): Number of frames to sense.
+        duration_frames (int or None): Number of frames to sense, or None to read until the end.
         rgb (bool): Whether to load the frames in RGB format. Default is True.
     
     Returns:
@@ -66,13 +66,16 @@ def load_video_frames(video_path, start_frame, duration_frames, rgb=True):
     cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
     
     frames = []
-    for i in range(duration_frames):
+    read_frames = 0
+    while duration_frames is None or read_frames < duration_frames:
         ret, frame = cap.read()
         if not ret:
             break
         if rgb:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frames.append(frame)
+        read_frames += 1
+    
     cap.release()
     
     return np.array(frames)

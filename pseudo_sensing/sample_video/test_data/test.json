@@ -844,7 +844,7 @@
     "duration_frames": 750,
     "fps": 25.0,
     "videopath": "sample_video/test_data/mIFuCipTWkQ_1_Rotary Motion_Counterclockwise_600.mp4",
-    "count": 139
+    "count": 126
   },
   "mIFuCipTWkQ_1_Rotary Motion_Counterclockwise_1200": {
     "id": "mIFuCipTWkQ",
@@ -855,7 +855,7 @@
     "duration_frames": 750,
     "fps": 25.0,
     "videopath": "sample_video/test_data/mIFuCipTWkQ_1_Rotary Motion_Counterclockwise_1200.mp4",
-    "count": 131
+    "count": 127
   },
   "mIFuCipTWkQ_2_Conveyor Motion_Left_30": {
     "id": "mIFuCipTWkQ",
@@ -888,7 +888,7 @@
     "duration_frames": 750,
     "fps": 25.0,
     "videopath": "sample_video/test_data/mIFuCipTWkQ_2_Conveyor Motion_Left_1200.mp4",
-    "count": 99
+    "count": 96
   },
   "L6rzLUJ1QoA_0_Conveyor Motion_Forward_30": {
     "id": "L6rzLUJ1QoA",
@@ -899,7 +899,7 @@
     "duration_frames": 1799,
     "fps": 59.94005994005994,
     "videopath": "sample_video/test_data/L6rzLUJ1QoA_0_Conveyor Motion_Forward_30.mp4",
-    "count": 67
+    "count": 66
   },
   "L6rzLUJ1QoA_0_Conveyor Motion_Forward_600": {
     "id": "L6rzLUJ1QoA",
