@@ -1,6 +1,7 @@
 *.mp4
 *.mp4.part
 pseudo_sensing_output/
+pseudo_sensing/test_output/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

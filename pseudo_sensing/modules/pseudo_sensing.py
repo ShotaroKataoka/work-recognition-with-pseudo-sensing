@@ -132,30 +132,51 @@ Noise Grid: The remaining cluster is the noise grid."""}
     with open(os.path.join(output_dir, 'exp_settings.json'), 'w') as f:
         json.dump(settings, f, indent=4)
 
-def run_sensing(video_path, sensor_dir):
+def run_sensing(video_path, sensor_dir, start_frame=0, duration_frames=None, top_k=3, cut_duration=10, median_window_size=5, output_dir=None):
     """
     Run the sensing for the video.
     
     Args:
     frames: ndarray, frames of the video
     sensor_dir: str, path to the sensor directory
+    start_frame: int, frame number to start sensing from, default 0
+    duration_frames: int, duration of the sensing in frames, default None
+    top_k: int, number of top sensing grids to select, default 3
+    cut_duration: int, duration of the cut in seconds, default 10
+    median_window_size: int, size of the window for median filter, default 3
+    output_dir: str, path to the output directory, default None
     """
     sensor = load_sensor(sensor_dir)
     fps = sensor['fps']
     filter_size = sensor['filter_size']
     grids = sensor['grids']
     
-    # start_frame = int(20*fps)
-    # start_frame = int(590*fps)
-    start_frame = int(1190*fps)
-    duration_frames = int(50*30)
     frames = load_video_frames(video_path, start_frame, duration_frames)
-    
-    sensing_grids_indices = get_sensing_grid_index(grids, top_k=2)
+    frames = reflect_padding(frames, cut_duration * fps)
+
+    sensing_grids_indices = get_sensing_grid_index(grids, top_k=top_k)
     frames = waveformalizer(frames, None, fps, 0, filter_size=filter_size)
-    wavelets_array, wavelet_freqs = get_wavelets_array(frames, 0, fps, None, exec_index=sensing_grids_indices, cut_duration=10)
-    max_freq_indicess = [get_max_freq_index(wavelets_array[i]) for i in range(wavelets_array.shape[0])]
+    wavelets_array, wavelet_freqs = get_wavelets_array(frames, 0, fps, output_dir, 
+                                                       save_wavelets=True if output_dir else False,
+                                                       exec_index=sensing_grids_indices, 
+                                                       cut_duration=cut_duration)
+    max_freq_indicess = [get_max_freq_index(wavelets_array[i], threshold=70) for i in range(wavelets_array.shape[0])]
  
+    # coeffs = []
+    # for i, max_freq_indices in enumerate(max_freq_indicess):
+    #     coeff = []
+    #     for t, max_freq_index in enumerate(max_freq_indices):
+    #         coeff.append(wavelets_array[i, max_freq_index, t])
+    #     coeffs.append(coeff)
+    # coeffs = np.array(coeffs)
+    # max_coeffs_sensors_index = np.argmax(np.abs(coeffs), axis=0)
+    # speeds = []
+    # for t, max_coeffs_sensor_index in enumerate(max_coeffs_sensors_index):
+    #     max_freq_index = max_freq_indicess[max_coeffs_sensor_index][t]
+    #     speed = wavelet_freqs[max_freq_index]
+    #     speeds.append(speed)
+    # speeds = np.array(speeds)
+
     speeds = []
     for i in range(len(max_freq_indicess[0])):
         speed = []
@@ -164,16 +185,28 @@ def run_sensing(video_path, sensor_dir):
         median_value = np.median(speed)
         speeds.append(median_value)
 
-    window_size = 3
     filtered_speeds = []
     for i in range(len(speeds)):
-        window_start = max(0, i - window_size // 2)
-        window_end = min(len(speeds), i + window_size // 2 + 1)
+        window_start = max(0, i - median_window_size // 2)
+        window_end = min(len(speeds), i + median_window_size // 2 + 1)
         window = speeds[window_start:window_end]
         median_value = np.median(window)
         filtered_speeds.append(median_value)
-    # print(filtered_speeds)
-    print(np.mean(filtered_speeds) * 30)
+    return filtered_speeds
+
+def reflect_padding(frames, pad_size):
+    """
+    Apply reflect padding to the signal.
+    
+    Args:
+    frames: ndarray, frames of the video
+    pad_size: int, size of the padding
+    
+    Returns:
+    ndarray: The padded signal
+    """
+    pad_size = int(pad_size)
+    return np.concatenate([frames[:pad_size][::-1], frames, frames[-pad_size:][::-1]])
 
 def get_sensing_grid_index(grids, top_k=None):
     """
