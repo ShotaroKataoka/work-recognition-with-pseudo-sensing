@@ -9,7 +9,7 @@ import torch.nn as nn
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-from dataloaders import make_data_loader
+from data import make_data_loader
 from utils.loss import SegmentationLosses
 from utils.lr_scheduler import LR_Scheduler
 from utils.saver import Saver

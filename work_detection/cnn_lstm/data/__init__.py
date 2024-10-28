@@ -2,7 +2,7 @@ import os
 
 from torch.utils.data import DataLoader
 
-from dataloaders import fudagami
+from data import fudagami
 
 
 def make_data_loader(args, **kwargs):

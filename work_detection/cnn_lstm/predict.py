@@ -10,11 +10,11 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-from dataloaders import make_data_loader
+from data import make_data_loader
 from utils.saver import Saver
 from utils.metrics import Evaluator
 from modeling.cnn_lstm import CNN_LSTM
-from dataloaders import fudagami
+from data import fudagami
 
 
 class Predictor(object):

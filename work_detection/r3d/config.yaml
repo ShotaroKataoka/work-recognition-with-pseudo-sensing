@@ -1,0 +1,13 @@
+dataset: 'factory_operation_video_dataset_v2'
+num_epochs: 10
+batch_size: 8
+learning_rate: 1e-4
+num_classes: 12
+clip_length: 16
+num_workers: 8
+train_transforms:
+  resize: [112, 112]
+  random_horizontal_flip: True
+  normalize:
+    mean: [0.43216, 0.394666, 0.37645]
+    std: [0.22803, 0.22145, 0.216989]
