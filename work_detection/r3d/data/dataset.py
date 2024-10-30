@@ -7,20 +7,22 @@ from torch.utils.data import Dataset
 from PIL import Image
 
 class VideoFrameDataset(Dataset):
-    def __init__(self, root_dir, clip_length=16, transform=None):
+    def __init__(self, root_dir, data_split='train', clip_length=16, clip_skip=7, transform=None):
         self.root_dir = root_dir
+        self.data_split = data_split  # 'train', 'val', 'test'
         self.clip_length = clip_length
         self.transform = transform
 
-        self.frame_paths = []  # 全フレームのパス
-        self.labels = []       # 各フレームのラベル
+        self.frame_paths = []
+        self.labels = []
 
-        # 動画ディレクトリの取得
-        video_dirs = sorted(glob(os.path.join(self.root_dir, 'frames', '2018*')))
+        # データスプリットに応じたパスを設定
+        split_dir = os.path.join(self.root_dir, self.data_split)
+        video_dirs = sorted(glob(os.path.join(split_dir, 'frames', '2018*')))
 
         for video_dir in video_dirs:
             video_id = os.path.basename(video_dir)
-            json_path = os.path.join(self.root_dir, 'metadata', f"{video_id}.json")
+            json_path = os.path.join(split_dir, 'metadata', f"{video_id}.json")
             with open(json_path, 'r') as f:
                 label_data = json.load(f)
             frame_labels = label_data['frames']
@@ -40,6 +42,8 @@ class VideoFrameDataset(Dataset):
                 self.frame_paths.append(frame_path)
                 self.labels.append(label)
 
+        self.frame_paths = self.frame_paths[::clip_skip]
+        self.labels = self.labels[::clip_skip]
         self.num_frames = len(self.frame_paths)
 
     def __len__(self):
@@ -50,12 +54,15 @@ class VideoFrameDataset(Dataset):
         clip_labels = self.labels[idx:idx+self.clip_length]
 
         clip = []
+        frame_ids = []
         for frame_path in clip_frame_paths:
             image = Image.open(frame_path).convert('RGB')
             if self.transform:
                 image = self.transform(image)
             clip.append(image)
-        clip = torch.stack(clip, dim=0)  # (T, C, H, W)
-        clip = clip.permute(1, 0, 2, 3)  # (C, T, H, W)
-        labels = torch.tensor(clip_labels)  # フレームごとのラベル (T,)
-        return clip, labels
+            frame_ids.append(os.path.basename(frame_path))  # フレーム識別子を取得
+        clip = torch.stack(clip, dim=0)
+        clip = clip.permute(1, 0, 2, 3)
+        labels = torch.tensor(clip_labels)
+
+        return clip, labels, frame_ids
