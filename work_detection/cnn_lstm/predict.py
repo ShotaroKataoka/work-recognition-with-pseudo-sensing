@@ -10,18 +10,18 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-from data import make_data_loader
+from dataloaders import make_data_loader
 from utils.saver import Saver
 from utils.metrics import Evaluator
 from modeling.cnn_lstm import CNN_LSTM
-from data import fudagami
+from dataloaders import fudagami
 
 
 class Predictor(object):
     def __init__(self, args):
         self.args = args
 
-        self.output_dir = f"./outputs/{self.args.checkname}/"
+        self.output_dir = f"./outputs/{args.model}/{self.args.checkname}/"
 
         batch_size = args.batch_size
         args.train_mode = False
@@ -35,7 +35,13 @@ class Predictor(object):
             device = torch.device("cpu")
         self.device = device
         
-        self.model = CNN_LSTM(12, model=args.model)
+        if 'b16' in args.checkname:
+            c_stream2_large = False
+        elif 'b8' in args.checkname:
+            c_stream2_large = True
+        else:
+            raise RuntimeError("=> batch size not found in '{}'" .format(args.checkname))
+        self.model = CNN_LSTM(12, model=args.model, c_stream2_large=c_stream2_large)
         self.model = self.model.to(device)
 
         self.evaluator = Evaluator(12)
@@ -55,16 +61,16 @@ class Predictor(object):
         outputs = {}
         for i, sample in enumerate(tbar):
             feats, target = sample['feats'], sample['labels']
-            if self.args.model == 'feat-mask' or self.args.model == 'feat-mask-sensor':
+            if self.args.use_mask_stream:
                 masks = sample['masks']
             else:
                 masks = 0
             if self.cuda:
                 feats = feats.to(device)
-                if self.args.model == 'feat-mask' or self.args.model == 'feat-mask-sensor':
+                if self.args.use_mask_stream:
                     masks = masks.to(device)
 
-            if self.args.model == 'feat-mask' or self.args.model == 'feat-mask-sensor':
+            if self.args.use_mask_stream:
                 inputs = {'feats': feats, 'masks': masks}
             else:
                 inputs = {'feats': feats}
@@ -108,7 +114,7 @@ class Predictor(object):
         labels = outputs["labels"]
         outputs = ["times, preds, labels\n"]
         outputs += [f"{time}, {pred}, {label}\n" for time, pred, label in zip(times, preds, labels)]
-        pred_dir = os.path.join(self.output_dir, 'outputs', f'{self.args.checkname}_{self.args.checkpoint_epoch}')
+        pred_dir = os.path.join(self.output_dir, 'outputs', f'ep{self.args.checkpoint_epoch}')
         if not os.path.exists(pred_dir):
             os.makedirs(pred_dir)
         with open(os.path.join(pred_dir, f'{split}.csv'), 'w') as f:
@@ -129,7 +135,7 @@ def main():
     parser.add_argument('--window-size', type=int, default=100,
                         metavar='N', help='Time window size.')
     parser.add_argument('--model', type=str, default='feat',
-                        choices=['feat', 'feat-sensor'],
+                        choices=['feat', 'feat-mask', 'feat-mask-sensor', 'feat-sensor', 'feat-sensor-small'],
                         help='model name (default: feat)')
     parser.add_argument('--is-dev', action='store_true', default=
                         False, help='restrict dataset num')
@@ -140,14 +146,16 @@ def main():
     args = parser.parse_args()
     assert args.checkname is not None, "Please set checkname."
     args.cuda = not args.no_cuda and torch.cuda.is_available()
+    args.use_mask_stream = args.model in ['feat-mask', 'feat-mask-sensor', 'feat-sensor', 'feat-sensor-small']
+    print(args)
 
     predictor = Predictor(args)
 
     print("start predicting.")
 
-    #predictor.pred('train')
+    predictor.pred('train')
     predictor.pred('val')
-    #predictor.pred('test')
+    predictor.pred('test')
 
 
 if __name__ == "__main__":

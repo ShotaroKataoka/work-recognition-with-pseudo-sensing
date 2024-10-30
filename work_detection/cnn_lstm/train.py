@@ -6,10 +6,10 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
-from tqdm import tqdm
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
-from data import make_data_loader
+from dataloaders import make_data_loader
 from utils.loss import SegmentationLosses
 from utils.lr_scheduler import LR_Scheduler
 from utils.saver import Saver
@@ -40,13 +40,19 @@ class Trainer(object):
             device = torch.device("cpu")
         self.device = device
         
-        self.model = CNN_LSTM(12, model=args.model)
+        if 'b16' in args.checkname:
+            c_stream2_large = False
+        elif 'b8' in args.checkname:
+            c_stream2_large = True
+        else:
+            raise RuntimeError("=> batch size not found in '{}'" .format(args.checkname))
+        self.model = CNN_LSTM(12, model=args.model, c_stream2_large=c_stream2_large)
         self.model = self.model.to(device)
 
         self.optimizer = torch.optim.Adam(self.model.parameters(),lr=args.lr)
         
         if args.use_weighted_loss:
-            loss_weights = population * 100 + 0.001
+            loss_weights = population * 100 + 1e-6
             loss_weights = loss_weights.mean() / loss_weights
             print('use weited loss', loss_weights)
             loss_weights = torch.tensor(loss_weights).float().to(device)
@@ -166,7 +172,7 @@ class Trainer(object):
         torch.save(self.model.state_dict(), checkname)
 
 def main():
-    parser = argparse.ArgumentParser(description="CNN-LSTM for factory dataset.")
+    parser = argparse.ArgumentParser(description="PyTorch DeeplabV3Plus Training")
     parser.add_argument('--no-cuda', action='store_true', default=
                         False, help='disables CUDA training')
     parser.add_argument('--epochs', type=int, default=100, metavar='N',
@@ -186,7 +192,7 @@ def main():
     parser.add_argument('--window-size', type=int, default=100,
                         metavar='N', help='Time window size.')
     parser.add_argument('--model', type=str, default='feat',
-                        choices=['basemodel', 'feat-sensor'],
+                        choices=['feat', 'feat-mask', 'feat-mask-sensor', 'feat-sensor', 'feat-sensor-small'],
                         help='model name (default: feat)')
     parser.add_argument('--use-weighted-loss', action='store_true', default=
                         False, help='use weighted loss')
@@ -196,7 +202,7 @@ def main():
     args = parser.parse_args()
     assert args.checkname is not None, "Please set checkname."
     args.cuda = not args.no_cuda and torch.cuda.is_available()
-    args.use_mask_stream = args.model == 'feat-sensor'
+    args.use_mask_stream = args.model in ['feat-mask', 'feat-mask-sensor', 'feat-sensor', 'feat-sensor-small']
     print(args)
 
     trainer = Trainer(args)
