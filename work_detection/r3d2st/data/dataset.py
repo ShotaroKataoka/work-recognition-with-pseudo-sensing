@@ -2,12 +2,13 @@ import os
 import json
 from glob import glob
 
+import numpy as np
 import torch
 from torch.utils.data import Dataset
 from PIL import Image
 
 class VideoFrameDataset(Dataset):
-    def __init__(self, root_dir, data_split='train', clip_length=16, clip_skip=7, transform=None):
+    def __init__(self, root_dir, data_split='train', clip_length=16, clip_skip=1, transform=None):
         self.root_dir = root_dir
         self.data_split = data_split  # 'train', 'val', 'test'
         self.clip_length = clip_length
@@ -15,12 +16,16 @@ class VideoFrameDataset(Dataset):
 
         self.frame_paths = []
         self.labels = []
+        self.sensors = []
 
         # データスプリットに応じたパスを設定
         split_dir = os.path.join(self.root_dir, self.data_split)
         video_dirs = sorted(glob(os.path.join(split_dir, 'frames', '2018*')))
 
-        for video_dir in video_dirs:
+        SENSOR_MAX_VALUE = 98
+        sensor_files = sorted(glob(os.path.join('../../pseudo_sensing/fudagami', self.data_split, '2018*')))
+
+        for video_dir, sensor_file in zip(video_dirs, sensor_files):
             video_id = os.path.basename(video_dir)
             json_path = os.path.join(split_dir, 'metadata', f"{video_id}.json")
             with open(json_path, 'r') as f:
@@ -34,24 +39,37 @@ class VideoFrameDataset(Dataset):
             video_frame_paths = sorted(glob(os.path.join(video_dir, '*.jpg')))
             num_frames = len(video_frame_paths)
 
+            frame_paths = []
+            labels = []
             for i in range(num_frames):
-                frame_path = video_frame_paths[i]
-                label = frame_label_dict.get(i, -1)
-                if label == -1:
-                    continue
-                self.frame_paths.append(frame_path)
-                self.labels.append(label)
-
-        self.frame_paths = self.frame_paths[::clip_skip]
-        self.labels = self.labels[::clip_skip]
-        self.num_frames = len(self.frame_paths)
+                if i % 15 == 7 or i % 15 == 0:
+                    frame_path = video_frame_paths[i]
+                    label = frame_label_dict.get(i, -1)
+                    if label == -1:
+                        continue
+                    frame_paths.append(frame_path)
+                    labels.append(label)
+            
+            sensors = np.load(sensor_file).astype(np.float32)
+            mean = SENSOR_MAX_VALUE / 2
+            sensors = (sensors[:, 60:80, 100:125] - mean) / mean
+            if sensors.shape[0] > len(frame_paths):
+                sensors = sensors[:len(frame_paths)]
+            if sensors.shape[0] < len(frame_paths):
+                frame_paths = frame_paths[:sensors.shape[0]]
+                labels = labels[:sensors.shape[0]]
+            self.frame_paths += frame_paths[::clip_skip]
+            self.labels += labels[::clip_skip]
+            self.sensors.append(sensors[::clip_skip])
+        self.sensors = np.concatenate(self.sensors, axis=0)
 
     def __len__(self):
-        return self.num_frames - self.clip_length + 1
+        return len(self.frame_paths) - self.clip_length + 1
 
     def __getitem__(self, idx):
         clip_frame_paths = self.frame_paths[idx:idx+self.clip_length]
         clip_labels = self.labels[idx:idx+self.clip_length]
+        clip_sensors = self.sensors[idx:idx+self.clip_length]
 
         clip = []
         frame_ids = []
@@ -64,5 +82,6 @@ class VideoFrameDataset(Dataset):
         clip = torch.stack(clip, dim=0)
         clip = clip.permute(1, 0, 2, 3)
         labels = torch.tensor(clip_labels)
+        sensors = torch.tensor(clip_sensors)
 
-        return clip, labels, frame_ids
+        return clip, labels, frame_ids, sensors

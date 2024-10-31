@@ -6,7 +6,7 @@ import yaml
 import torch
 from torch.utils.data import DataLoader
 from data.dataset import VideoFrameDataset
-from models.model import R3D_Model
+from models.model import R3D_TwoStream_Model
 from utils.transforms import get_transforms
 from utils.mypath import Path
 from tqdm import tqdm
@@ -40,13 +40,13 @@ def main():
         root_dir=dataset_root,
         data_split='test',  # 'test' データを使用
         clip_length=clip_length,
-        clip_skip=7,
+        clip_skip=2,
         transform=get_transforms(config, is_train=False)
     )
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=num_workers, pin_memory=True)
 
     # モデルの定義
-    model = R3D_Model(num_classes=num_classes, pretrained=False)
+    model = R3D_TwoStream_Model(num_classes=num_classes, pretrained=True)
     model = model.to(device)
 
     # チェックポイントの読み込み
@@ -57,10 +57,11 @@ def main():
     predictions = []
 
     with torch.no_grad():
-        for clips, labels, frame_ids in tqdm(test_loader):
+        for clips, labels, frame_ids, sensors in tqdm(test_loader):
             clips = clips.to(device)
             labels = labels.view(-1).numpy()  # 正解ラベルを取得
-            outputs = model(clips)
+            sensors = sensors.view(sensors.shape[0], 1, sensors.shape[1], sensors.shape[2], sensors.shape[3]).to(device)
+            outputs = model(clips, sensors)
             outputs = outputs.reshape(-1, num_classes)
             _, preds = torch.max(outputs, 1)
             preds = preds.cpu().numpy()

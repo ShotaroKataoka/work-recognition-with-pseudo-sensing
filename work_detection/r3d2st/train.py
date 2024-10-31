@@ -5,7 +5,7 @@ import torch.optim as optim
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from data.dataset import VideoFrameDataset
-from models.model import R3D_Model
+from models.model import R3D_TwoStream_Model
 from utils.transforms import get_transforms
 from utils.mypath import Path
 from utils.logger import get_logger
@@ -26,11 +26,12 @@ def validate(model, val_loader, criterion, device, num_classes):
 
     with torch.no_grad():
         val_loader_tqdm = tqdm(val_loader, desc='Validation', unit='batch')  # tqdmの追加
-        for clips, labels in val_loader_tqdm:
+        for clips, labels, _, sensors in val_loader_tqdm:
             clips = clips.to(device)
             labels = labels.to(device)
+            sensors = sensors.view(sensors.shape[0], 1, sensors.shape[1], sensors.shape[2], sensors.shape[3]).to(device)
 
-            outputs = model(clips)
+            outputs = model(clips, sensors)
             outputs = outputs.reshape(-1, num_classes)
             labels = labels.view(-1)
             loss = criterion(outputs, labels)
@@ -96,7 +97,6 @@ def main():
         root_dir=dataset_root,
         data_split='train',
         clip_length=clip_length,
-        clip_skip=7,
         transform=get_transforms(config, is_train=True)
     )
     train_loader = DataLoader(train_dataset, batch_size=batch_size, prefetch_factor=4, shuffle=True, num_workers=num_workers, pin_memory=True)
@@ -105,13 +105,13 @@ def main():
         root_dir=dataset_root,
         data_split='val',
         clip_length=clip_length,
-        clip_skip=32,
+        clip_skip=4,
         transform=get_transforms(config, is_train=False)
     )
     val_loader = DataLoader(val_dataset, batch_size=batch_size, prefetch_factor=4, shuffle=False, num_workers=num_workers, pin_memory=True)
 
     # モデルの定義
-    model = R3D_Model(num_classes=num_classes, pretrained=True)
+    model = R3D_TwoStream_Model(num_classes=num_classes, pretrained=True)
     model = model.to(device)
 
     # 損失関数とオプティマイザ
@@ -130,12 +130,13 @@ def main():
 
         with tqdm(train_loader, unit="batch") as tepoch:
             tepoch.set_description(f"Epoch {epoch+1}/{num_epochs}")
-            for clips, labels, _ in tepoch:
+            for clips, labels, _, sensors in tepoch:
                 clips = clips.to(device)  # (batch_size, C, T, H, W)
                 labels = labels.to(device)  # (batch_size, T)
+                sensors = sensors.view(sensors.shape[0], 1, sensors.shape[1], sensors.shape[2], sensors.shape[3]).to(device)
 
                 optimizer.zero_grad()
-                outputs = model(clips)  # (batch_size, T, num_classes)
+                outputs = model(clips, sensors)  # (batch_size, T, num_classes)
 
                 # 出力とラベルをフラット化して損失を計算
                 outputs = outputs.reshape(-1, num_classes)  # (batch_size * T, num_classes)

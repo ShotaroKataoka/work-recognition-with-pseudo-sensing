@@ -8,9 +8,11 @@ class SensorStream(nn.Module):
         super(SensorStream, self).__init__()
         # Define a simple 3D CNN for the sensor data
         self.conv1 = nn.Conv3d(input_channels, 16, kernel_size=3, stride=1, padding=1)
-        self.pool1 = nn.MaxPool3d(kernel_size=(2,2,2), stride=(2,2,2))
-        self.conv2 = nn.Conv3d(16, sensor_channel, kernel_size=3, stride=1, padding=1)
-        self.pool2 = nn.AdaptiveAvgPool3d((None, 1, 1))  # Global Average Pooling over spatial dimensions
+        self.pool1 = nn.MaxPool3d(kernel_size=2, stride=2)  # Reduces T by half
+        self.conv2 = nn.Conv3d(16, 32, kernel_size=3, stride=1, padding=1)
+        self.pool2 = nn.MaxPool3d(kernel_size=2, stride=2)  # Reduces T by half
+        self.conv3 = nn.Conv3d(32, sensor_channel, kernel_size=3, stride=1, padding=1)
+        self.pool3 = nn.MaxPool3d(kernel_size=2, stride=2)  # Further reduces T by half
 
     def forward(self, x):
         x = self.conv1(x)
@@ -18,8 +20,11 @@ class SensorStream(nn.Module):
         x = self.pool1(x)
         x = self.conv2(x)
         x = nn.functional.relu(x)
-        x = self.pool2(x)  # (batch_size, sensor_channel, T_out, 1, 1)
-        x = x.squeeze(-1).squeeze(-1)  # (batch_size, sensor_channel, T_out)
+        x = self.pool2(x)
+        x = self.conv3(x)
+        x = nn.functional.relu(x)
+        x = self.pool3(x)
+        x = x.mean(dim=[3,4])  # Global Average Pooling over spatial dimensions
         x = x.permute(0, 2, 1)  # (batch_size, T_out, sensor_channel)
         x = x.reshape(-1, x.size(-1))  # (batch_size * T_out, sensor_channel)
         return x
