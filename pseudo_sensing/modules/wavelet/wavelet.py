@@ -59,15 +59,25 @@ def _wavelet_transform(signal, sampling_fps, start_frame, cut_duration, output_f
     wavelet = 'morl'
     dt = 1 / sampling_fps
 
-    scale = sampling_fps / 30
-    min_scale = 1 * scale
-    max_scale = 150 * scale
-    ds = 0.5 * scale
+    min_scale = 2
+    max_scale = 4 * sampling_fps
+    ds = sampling_fps / 30
     
+    f_center = 0.8125
+    def calc_s(f):
+        return f_center / (f * (1/sampling_fps))
+
+    min_scale = calc_s(sampling_fps / 2)
+    min_scale = calc_s(10)
+    max_scale = calc_s(0.2)
+
     scales = np.arange(min_scale, max_scale+ds, ds)
     scales = np.geomspace(min_scale, max_scale, num=len(scales))
     
     coefficients, freqs = pywt.cwt(signal, scales, wavelet, dt)
+
+    # print(freqs, sampling_fps)
+    # exit()
 
     # cut boundary effects
     cut_frames = int(cut_duration * sampling_fps)

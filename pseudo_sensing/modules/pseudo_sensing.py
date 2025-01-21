@@ -160,7 +160,7 @@ def run_sensing(video_path, sensor_dir, start_frame=0, duration_frames=None, top
                                                        save_wavelets=True if output_dir else False,
                                                        exec_index=sensing_grids_indices, 
                                                        cut_duration=cut_duration)
-    max_freq_indicess = [get_max_freq_index(wavelets_array[i], threshold=70) for i in range(wavelets_array.shape[0])]
+    max_freq_indicess = [get_max_freq_index(wavelets_array[i], threshold=30) for i in range(wavelets_array.shape[0])]
  
     # coeffs = []
     # for i, max_freq_indices in enumerate(max_freq_indicess):

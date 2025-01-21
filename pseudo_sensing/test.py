@@ -3,12 +3,10 @@ import os
 import argparse
 
 import numpy as np
-from tqdm import tqdm
 
 from modules.pseudo_sensing import run_sensing
-from modules.utils import load_samples_json
 
-def run(save=False):
+def run(save_wavelet=False, output_dir='test_output'):
     """Run pseudo sensing on a sample.
 
     Args:
@@ -36,8 +34,9 @@ def run(save=False):
         fps = test_data[key]['fps']
 
         speeds = run_sensing(video_path, sensor_dir, start_frame, duration_frames, 
+                             cut_duration=25,
                              top_k=3, 
-                             output_dir=f'test_output/{video_id}_{sensor_id}_{movement_type}_{movement_direction}_{start_frame//fps:.0f}' if save else None)
+                             output_dir=f'{output_dir}/{video_id}_{sensor_id}_{movement_type}_{movement_direction}_{start_frame//fps:.0f}' if save_wavelet else None)
         sensor_count = np.mean(speeds) * duration_frames / fps
         answer_count = test_data[key]['count']
 
@@ -55,16 +54,16 @@ def run(save=False):
             'sensed_speed': np.mean(speeds),
             'answer_speed': answer_count / (duration_frames / fps)
         }
-    with open('sample_video/test_data/results.json', 'w') as f:
+    with open(f'{output_dir}/results.json', 'w') as f:
         json.dump(results, f, indent=4)
 
-def load_results():
-    with open('sample_video/test_data/results.json', 'r') as f:
+def load_results(output_dir='sample_video/test_data'):
+    with open(f'{output_dir}/results.json', 'r') as f:
         results = json.load(f)
     return results
 
-def evaluate():
-    results = load_results()
+def evaluate(result_dir):
+    results = load_results(result_dir)
     error = {}
     correct = {}
     count = {}
@@ -81,7 +80,8 @@ def evaluate():
             count[movement_type] = 0
         error[movement_type] += [np.abs(sensed_count - answer_count)]
         # if np.abs(sensed_speed - answer_speed) < 0.0333333334*4:
-        if np.abs(sensed_count - answer_count) < 2:
+        # if np.abs(sensed_count - answer_count) < 1:
+        if np.abs(sensed_count - answer_count) < (answer_count * 0.10):
             correct[movement_type] += 1
         else:
             video_id = results[key]['id']
@@ -90,7 +90,7 @@ def evaluate():
             movement_direction = results[key]['movement_direction']
             start_frame = results[key]['start_frame']
             fps = results[key]['fps']
-            print(f'error: {np.abs(sensed_count - answer_count):.2f} {video_id}_{sensor_id}_{movement_type}_{movement_direction} {start_frame/fps:.0f}')
+            # print(f'error: {sensed_count:.2f} - {answer_count:.2f} = {np.abs(sensed_count - answer_count):.2f} {video_id}_{sensor_id}_{movement_type}_{movement_direction} {start_frame/fps:.0f}')
         count[movement_type] += 1
     
     all_correct = 0
@@ -109,14 +109,22 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--sensing', action='store_true', help='Run pseudo sensing')
     parser.add_argument('--evaluation', action='store_true', help='Run evaluation')
-    parser.add_argument('--save', action='store_true', help='Save the results')
+    parser.add_argument('--save_wavelet', action='store_true', help='Save the results')
+    parser.add_argument('--output_dir', type=str, default=None, help='Output directory')
+
     args = parser.parse_args()
+
+    if args.output_dir is None:
+        print('Please specify --output_dir')
+        exit()
+    
+    os.makedirs(args.output_dir, exist_ok=True)
 
     if not args.sensing and not args.evaluation:
         print('Please specify --sensing or --evaluation')
 
     if args.sensing:
-        run(save=args.save)
+        run(save_wavelet=args.save_wavelet, output_dir=args.output_dir)
     
     if args.evaluation:
-        evaluate()
+        evaluate(args.output_dir)
