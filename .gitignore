@@ -1,3 +1,14 @@
+*.mp4
+*.mp4.part
+pseudo_sensing_output/
+pseudo_sensing/test_output/
+*.pth
+pseudo_sensing/error_analysis/
+work_detection/data/
+work_detection/aopa1st/
+work_detection/cnn_lstm/
+pseudo_sensing/results/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
